@@ -12,7 +12,7 @@ It concerns the interview team and anyone else connected to the interview proces
 
 # Context
 
-Let's implement a web app which enables users to browse directory content on a server. The key elements of the application are:
+Let's implement a web app which enables users to browse directory content on a server. The key elements of the application will be:
 
  - a file & directory browser with search and sorting (client-side)
  - authentication; the file tree is only accessible after signing in
@@ -55,21 +55,22 @@ The entire codebase shall use typescript, reasonable linting, and be dockerized.
 
 In a real app, error reporting would be done through Sentry, but for the purposes of the challenge `console.error` will suffice. 
 
-There will be a few tests for the key React components (the browser view) and for the key API endpoints, but coverage shouldn't become an obsession.
+There will be a few tests for the key React components and for the key API endpoints, but coverage shouldn't become an obsession.
 
 ## Frontend
 
 Let's use React (`create-react-app` for the simplicity of its setup), React Router, and Tailwind on the frontend. Core considerations:
 
  - **Authentication:** All protected routes will be wrapped in a simple component `<Protected />` which checks whether the user is authenticated. When they're not, the user is taken to the `/sign-in` page, and the original URL is stored in the `state` property on the `location` object of our router. That way, we can redirect the user back to where they intended to go once they've signed in.
- - **URL as the source of truth:** We will store the location inside the file tree as URL params, the sorting and filtering criteria as query params (`/browse/my-folder/my-child-folder?sort=name-up&search=holida`).
+ - **URL as the source of truth:** We will store user's current working directory inside the file tree as URL params, the sorting and filtering criteria as query params (`/browse/my-folder/my-child-folder?sort=name-up&search=holida`).
+ - **Error handling**: Let's pay attention to loading states, errors (at the very least 400, 401, 403, 404, 500) and other edge cases.
  - **Security:** Input and output shall be sanitised (URL params, query params, and the search input).
 
 ## Backend
 
 The server will be a plain `express` app. For thae sake of simplicity, let's skip a database and store everything in memory instead.
 
-Since searching and filtering is required on the client only, a handful of **API** endpoints will suffice:
+Since searching and filtering is required on the client only, a handful of API endpoints will suffice:
 
  - `GET /contents?path={path}` to obtain 1-level deep contents of a directory, returning `{ contents: Item }` where `interface Item { name: string, sizeKb: number | undefined, type: "file" | "dir", items: undefined | Item[] }`
  - `POST /sign-in` to sign the user in
@@ -87,7 +88,7 @@ To start with, let's use a self-signed certificate to enable `TLS` even on local
 
 ### Session Management
 
-To avoid dependencies on external libs, we'll build a simple **session management** ourselves. On signing in, we generate a random `sessionId` for the user. This is used as the `key` in the `sessions` key-value store and also set as a cookie sent back to the client. (See more on security considerations in the sections below.)
+To avoid dependencies on external libs, we'll build a simple **session management** ourselves. On signing in, we generate a random `sessionId` for the user. This is used as the `key` in the `sessions` key-value store and also set as a cookie sent back to the client. (See more on security considerations in the [XSS](#cross-site-scripting-xss) and [CSRF](#cross-site-request-forgery-csrf) sections below.)
 
 ### Directory Traversing
 
@@ -95,9 +96,9 @@ Since we'll be browsing real directories, we also need to make sure the user is 
 
 ### Cross-Site-Scripting (XSS)
 
-Because we're not storing user content and we are skipping file previews, Stored XSS is not an issue. Sanitizing user input and output should take care of Reflected and DOM-Based XSS. Since we won't be relying on any external resources, let's also write a strict Content Security Policy (CSP) to tighten things up.
+Because we're not storing user content and we are skipping file previews, Stored XSS is not an issue. Sanitising user input and output should take care of Reflected and DOM-Based XSS. Since we won't be relying on any external resources, let's also write a strict Content Security Policy (CSP) to tighten things up.
 
-Should a vector attack exist after all, we can mitigate this by storing the `sessionId` as an `httpOnly` cookie, making it unavailable to the client (in the `document.cookie`) and, therefore, immune to being snatched by a third party dependency.
+Should a vector attack exist after all, we can mitigate this by storing the `sessionId` as an `httpOnly` cookie, making it unavailable to the client and, therefore, immune to being snatched by a third party.
 
 ### Cross-Site-Request-Forgery (CSRF)
 
@@ -107,10 +108,10 @@ Since CSRF exploits are applicable only with state-changing requests, we have a 
  - Check the `Content-Type` header is set to `application/json` to prevent e.g. 3rd party forms from being submitted to our endpoint.
  - Set the `sameSite` attribute of our `sessionId` cookie to `lax` to prevent it from being sent on cross-site requests (with the exception of the "safe" `GET` and `HEAD` which should never be modifying state).
 
- The above 👆 should actually suffice, but we might as well implement token-based mitigation for good measure:
+ The above combo 👆 should actually suffice, but we might as well implement token-based mitigation for good measure and practice:
 
   - When generating our `sessionId`, let's also generate a `csrfId`, save it as an attribute on the session, and set as a `sameSite` (but not `httpOnly`) cookie.
-  - When submitting the login form, we check the `csrfId` is included in the request header and matches the one stored with the `sessionId`
+  - When submitting the login form, we check the `csrfId` is included in the request header and matches the one stored with the `sessionId` (and in the `csrfId` cookie).
   - On the frontend, we need to set the `Content-Type` appropriately, and include the `csrfId` cookie value in the headers.
 
 ### Security in the Real World
