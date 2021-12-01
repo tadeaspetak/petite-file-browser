@@ -23,7 +23,7 @@ Let's implement a web app which enables users to browse directory content on a s
 This simple `app` shall empower users to:
 
  - sign in when not authenticated
- - view & browse folders
+ - view & browse directories
  - view metadata of a file (no preview)
  - sort and filter on all available attributes (`name`, `size`, and `type`)
  - bookmark URLs for quick navigation
@@ -32,6 +32,7 @@ On the backend, this entails a simple `server` which:
  
  - serves web assets
  - manages user sessions
+ - returns contents of a directory on a given path
 
 Finally, a few constraints and allowed/encouraged shortucts:
 
@@ -44,16 +45,16 @@ Finally, a few constraints and allowed/encouraged shortucts:
 
 # Wireframes
 
-_Note: Honestly, these are more colourful and specific than wireframes need to be — or maybe even should be — but it was fast & easy with [Whimsical](https://whimsical.com)._
+_Note: Honestly, these are more colourful and specific than wireframes need to be — or maybe even should be — but it was too fast & easy with [Whimsical](https://whimsical.com) to do it any other way._
 
 <img src="assets/signin.png" style="max-width: 600px" alt="Sign In" />
-<img src="assets/browse.png" style="max-width: 600px;" alt="Browse a Folder" /> 
+<img src="assets/browse.png" style="max-width: 600px;" alt="Browse a Directory" /> 
 
 # Implementation Details
 
 The entire codebase shall use typescript, reasonable linting, and be dockerized.
 
-In a real app, error reporting would be done through Sentry, but for the purposes of the challenge `console.error` will suffice. 
+In a real app, error reporting would be done through an integration (like Sentry), but for the purposes of the challenge `console.error` will suffice. 
 
 There will be a few tests for the key React components and for the key API endpoints, but coverage shouldn't become an obsession.
 
@@ -62,9 +63,9 @@ There will be a few tests for the key React components and for the key API endpo
 Let's use React (`create-react-app` for the simplicity of its setup), React Router, and Tailwind on the frontend. Core considerations:
 
  - **Authentication:** All protected routes will be wrapped in a simple component `<Protected />` which checks whether the user is authenticated. When they're not, the user is taken to the `/sign-in` page, and the original URL is stored in the `state` property on the `location` object of our router. That way, we can redirect the user back to where they intended to go once they've signed in.
- - **URL as the source of truth:** We will store user's current working directory inside the file tree as URL params, the sorting and filtering criteria as query params (`/browse/my-folder/my-child-folder?sort=name-up&search=holida`).
- - **Error handling**: Let's pay attention to loading states, errors (at the very least 400, 401, 403, 404, 500) and other edge cases.
- - **Security:** Input and output shall be sanitised (URL params, query params, and the search input).
+ - **URL as the source of truth:** We will store user's current working directory inside the file tree as URL params, the sorting and filtering criteria as query params (`/browse/my-directory/my-child-directory?sort=name-up&search=holida`).
+ - **Error handling**: Let's pay attention to loading states, errors (at the very least 400, 401, 403, 404, 500) and edge cases such as invalid filtering options, etc.
+ - **Security:** Input and output shall be sanitised (URL params, query params, and the search input field).
 
 ## Backend
 
@@ -88,15 +89,17 @@ To start with, let's use a self-signed certificate to enable `TLS` even on local
 
 ### Session Management
 
-To avoid dependencies on external libs, we'll build a simple **session management** ourselves. On signing in, we generate a random `sessionId` for the user. This is used as the `key` in the `sessions` key-value store and also set as a cookie sent back to the client. (See more on security considerations in the [XSS](#cross-site-scripting-xss) and [CSRF](#cross-site-request-forgery-csrf) sections below.)
+To avoid depending on external libs, we'll build a simple **session management** ourselves. On signing in, we generate a random `sessionId` for the user. This is used as the `key` in the `sessions` key-value store and also set as a cookie sent back to the client. (See more on security considerations in the [XSS](#cross-site-scripting-xss) and [CSRF](#cross-site-request-forgery-csrf) sections below.)
 
 ### Directory Traversing
 
-Since we'll be browsing real directories, we also need to make sure the user is not allowed outside their root directory. Starting with [path.normalize()](https://nodejs.org/api/path.html#pathnormalizepath) followed by removing any remaining `./` and `../` at the beginning of the path should suffice.
+Since we'll be browsing real directories, we also need to make sure the user is not allowed outside their root directory. After sanitising the URL input, [path.normalize()](https://nodejs.org/api/path.html#pathnormalizepath) followed by removing any remaining `./` and `../` at the beginning of the path should suffice.
 
 ### Cross-Site-Scripting (XSS)
 
-Because we're not storing user content and we are skipping file previews, Stored XSS is not an issue. Sanitising user input and output should take care of Reflected and DOM-Based XSS. Since we won't be relying on any external resources, let's also write a strict Content Security Policy (CSP) to tighten things up.
+Because we're not storing any user content and we are skipping file previews, Stored XSS is not an issue. Sanitising user input and output should take care of Reflected and DOM-Based XSS.
+
+Since we won't be relying on any external resources, let's also write a strict Content Security Policy (CSP) to tighten things up.
 
 Should a vector attack exist after all, we can mitigate this by storing the `sessionId` as an `httpOnly` cookie, making it unavailable to the client and, therefore, immune to being snatched by a third party.
 
@@ -110,7 +113,7 @@ Since CSRF exploits are applicable only with state-changing requests, we have a 
 
  The above combo 👆 should actually suffice, but we might as well implement token-based mitigation for good measure and practice:
 
-  - When generating our `sessionId`, let's also generate a `csrfId`, save it as an attribute on the session, and set as a `sameSite` (but not `httpOnly`) cookie.
+  - When generating our `sessionId`, let's also generate a `csrfId`, save it as an attribute on the session, and set as a `sameSite` (but not `httpOnly` so it can be used by the client) cookie.
   - When submitting the login form, we check the `csrfId` is included in the request header and matches the one stored with the `sessionId` (and in the `csrfId` cookie).
   - On the frontend, we need to set the `Content-Type` appropriately, and include the `csrfId` cookie value in the headers.
 
