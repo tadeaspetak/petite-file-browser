@@ -38,7 +38,7 @@ Finally, a few constraints and allowed/encouraged shortucts:
  - containerize the app (Docker)
  - use native browser API for networking
  - use native/standard libraries
- - store uwers & sessions in memory, no need for a db
+ - store users & sessions in memory, no need for a db
  - feel free to hardcode usernames, hashes, or directory paths
  - make it secure (strong TLS, no web security vulnerabilities)
 
@@ -53,24 +53,25 @@ _Note: Honestly, these are more colourful and specific than wireframes need to b
 
 The entire codebase shall use typescript, reasonable linting, and be dockerized.
 
-In a real app, performance monitoring and error reporting would be done through Sentry, but for the purposes of the challenge, `console.error` in the browser and logging to a file will suffice.
+In a real app, error reporting would be done through Sentry, but for the purposes of the challenge `console.error` will suffice. 
 
 There will be a few tests for the key React components (the browser view) and for the key API endpoints, but coverage shouldn't become an obsession.
 
 ## Frontend
 
-We will use React (`create-react-app` for the simplicity of its setup), React Router, and Tailwind on the frontend. Core considerations:
+Let's use React (`create-react-app` for the simplicity of its setup), React Router, and Tailwind on the frontend. Core considerations:
 
- - **Authentication:** All protected routes are wrapped in a simple component `<Protected />` which checks whether the user is authenticated. When they're not, the user is taken to the `/sign-in` page, and the original URL is stored in the `state` property on the `location` object of our router. That way, we can redirect them back to where they intended to go once they've signed in.
- - **URL as the source of truth:** The location in the file tree is stored as URL params, the sorting and filtering criteria as query params (`/browse/my-folder/my-child-folder?sort=name-up&search=holid`)
- - **Security:** Sanitize input and output, i.e. URL params, query params, and the search input.
+ - **Authentication:** All protected routes will be wrapped in a simple component `<Protected />` which checks whether the user is authenticated. When they're not, the user is taken to the `/sign-in` page, and the original URL is stored in the `state` property on the `location` object of our router. That way, we can redirect the user back to where they intended to go once they've signed in.
+ - **URL as the source of truth:** We will store the location inside the file tree as URL params, the sorting and filtering criteria as query params (`/browse/my-folder/my-child-folder?sort=name-up&search=holida`).
+ - **Security:** Input and output shall be sanitised (URL params, query params, and the search input).
 
 ## Backend
 
-The server will be written as a simple `express` app. For simplicity, we'll skip a database and store everything in memory instead.
+The server will be a plain `express` app. For thae sake of simplicity, let's skip a database and store everything in memory instead.
 
-Since searching and filtering is required on the client only, the **API** consists of just a few endpoints:
- - `GET /contents/{path}` to obtain the contents of a directory
+Since searching and filtering is required on the client only, a handful of **API** endpoints will suffice:
+
+ - `GET /contents?path={path}` to obtain 1-level deep contents of a directory, returning `{ contents: Item }` where `interface Item { name: string, sizeKb: number | undefined, type: "file" | "dir", items: undefined | Item[] }`
  - `POST /sign-in` to sign the user in
  - `POST /sign-out` to sign the user out (`POST` to avoid [prefetching it](https://twitter.com/nick_craver/status/296281730984316928?lang=fa) 🤦) 
 
@@ -82,31 +83,31 @@ Security is, naturally, a huge consideration.
 
 ### TLS
 
-To start with, let's use a self-signed certificate to enable development in a `TLS` environment even on localhost. (Unfortunately, this implies you will need to import the certificate as trusted or "Accept the risk" in your browser. Thanks for your understanding 🙏)
+To start with, let's use a self-signed certificate to enable `TLS` even on localhost. Unfortunately, this does imply you will need to import the certificate as trusted or "Accept the risk" in your browser. Cheers for your patience in advance 🙏
 
 ### Session Management
 
-To avoid dependencies on external libs, we'll build a simple **session management** ourselves. On signing in, we generate a random `sessionId` for the user. This is used as the `key` in the `sessions` key-value store, and also set as a cookie sent back to the client (more on security considerations in the sections below).
+To avoid dependencies on external libs, we'll build a simple **session management** ourselves. On signing in, we generate a random `sessionId` for the user. This is used as the `key` in the `sessions` key-value store and also set as a cookie sent back to the client. (See more on security considerations in the sections below.)
 
 ### Directory Traversing
 
-Since we're browsing real directories, we also need to make sure the user is not allowed outside their root directory. Starting with [path.normalize()](https://nodejs.org/api/path.html#pathnormalizepath), then remove any remaining `./` and `../` at the beginning of the path should suffice. This will make it impossible to traverse outside the root directory.
+Since we'll be browsing real directories, we also need to make sure the user is not allowed outside their root directory. Starting with [path.normalize()](https://nodejs.org/api/path.html#pathnormalizepath) followed by removing any remaining `./` and `../` at the beginning of the path should suffice.
 
 ### Cross-Site-Scripting (XSS)
 
-As we're not storing user content and we are skipping file previews, Stored XSS is not an issue in our case. Sanitizing user input and output (effectively only the URL) should take care of Reflected and DOM-Based XSS. Since we won't be relying on any external resources, let's also write a strict Content Security Policy (CSP).
+Because we're not storing user content and we are skipping file previews, Stored XSS is not an issue. Sanitizing user input and output should take care of Reflected and DOM-Based XSS. Since we won't be relying on any external resources, let's also write a strict Content Security Policy (CSP) to tighten things up.
 
-Should a vector attack exist anyway, we can mitigate this by storing the `sessionId` as an `httpOnly` cookie, making it unavailable to the client and, therefore, immune to being snatched by a third party.
+Should a vector attack exist after all, we can mitigate this by storing the `sessionId` as an `httpOnly` cookie, making it unavailable to the client (in the `document.cookie`) and, therefore, immune to being snatched by a third party dependency.
 
 ### Cross-Site-Request-Forgery (CSRF)
 
-Since CSRF exploits are applicable only with state-changing requests, we have a single candidate to protect, namely the `POST /sign-in` endpoint. To prevent login CSRF, let's:
+Since CSRF exploits are applicable only with state-changing requests, we have a single candidate to protect, namely the `POST /sign-in` endpoint. To prevent the login flavour of CSRF, let's:
 
  - Disable `CORS`; in our case, this is the default behaviour.
  - Check the `Content-Type` header is set to `application/json` to prevent e.g. 3rd party forms from being submitted to our endpoint.
  - Set the `sameSite` attribute of our `sessionId` cookie to `lax` to prevent it from being sent on cross-site requests (with the exception of the "safe" `GET` and `HEAD` which should never be modifying state).
 
- The above 👆 should actually suffice, but we might as well implement token-based mitigation for good measure and practice:
+ The above 👆 should actually suffice, but we might as well implement token-based mitigation for good measure:
 
   - When generating our `sessionId`, let's also generate a `csrfId`, save it as an attribute on the session, and set as a `sameSite` (but not `httpOnly`) cookie.
   - When submitting the login form, we check the `csrfId` is included in the request header and matches the one stored with the `sessionId`
@@ -114,14 +115,13 @@ Since CSRF exploits are applicable only with state-changing requests, we have a 
 
 ### Security in the Real World
 
-In my estimation, these precautions should make our app pretty safe. In a real-world scenario, we would, naturally, need to consider the following and much more:
+In my estimation, these precautions should make our app pretty safe four our use case. In a real-world scenario, we would, naturally, need to consider the following and much more:
 
- - The app would be deployed, which would give us heaps of room for misconfiguration.
- - There would a database, i.e. plenty of potential for SQL injections.
- - We would probably be forced to use the `strict-dynamic` CSP since we would start loading external assets.
- - If we added the possibilty for file uploading, the `X-Content-Type-Options: nosniff` header should be set to prevent browser from MIME sniffing.
+ - If files were to be viewed — not to mention uploaded — the `X-Content-Type-Options: nosniff` header should be set to prevent browser from MIME sniffing.
+ - The app would be deployed, which would give us plenty of room for misconfiguration.
+ - There would a database, i.e. lots of potential for SQL injections.
+ - We would most likely be forced to use the `strict-dynamic` CSP since we would start loading external assets.
 
-<a name="timeline"></a>
-# 5. Timeline
+# Timeline
 
-Ideally, this design document is approved within a few days, and my PRs can start coming in. I will do my best to have submitted the last PR by Wednesday, Dec 8.
+Ideally, this design document will be approved by Dec 3, and my PRs can start coming in. I will do my absolute best to have submitted the last PR by Wednesday, Dec 8.
