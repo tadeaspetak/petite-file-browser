@@ -69,7 +69,7 @@ Let's use React (`create-react-app` for the simplicity of its setup), React Rout
 
 ## Backend
 
-The server will be a plain `express` app. For thae sake of simplicity, let's skip a database and store everything in memory instead.
+The server will be a plain `express` app. For the sake of simplicity, let's skip a database and store everything in memory instead.
 
 Since searching and filtering is required on the client only, a handful of API endpoints will suffice:
 
