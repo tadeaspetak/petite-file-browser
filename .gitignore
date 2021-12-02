@@ -23,4 +23,5 @@ yarn-debug.log*
 yarn-error.log*
 
 # editor
-.vscode
+.vscode/*
+!.vscode/settings.sample.json
