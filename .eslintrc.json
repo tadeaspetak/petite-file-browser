@@ -1,0 +1,45 @@
+{
+  "extends": [
+    "react-app",
+    "react-app/jest"
+  ],
+  "plugins": [
+    "simple-import-sort",
+    "json-format",
+    "prettier"
+  ],
+  "settings": {
+    "json/json-with-comments-files": []
+  },
+  "rules": {
+    "no-console": "warn",
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
+    "prettier/prettier": [
+      "error",
+      {
+        "printWidth": 120,
+        "trailingComma": "all",
+        "singleQuote": false,
+        "bracketSpacing": true,
+        "tabWidth": 2,
+        "semi": true,
+        "endOfLine": "auto",
+        "arrowParens": "always"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "server/*.ts"
+      ],
+      "extends": [
+        "eslint:recommended"
+      ],
+      "env": {
+        "browser": false
+      }
+    }
+  ]
+}
