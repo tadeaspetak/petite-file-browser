@@ -18,7 +18,7 @@
     "prettier/prettier": [
       "error",
       {
-        "printWidth": 120,
+        "printWidth": 100,
         "trailingComma": "all",
         "singleQuote": false,
         "bracketSpacing": true,
@@ -32,7 +32,7 @@
   "overrides": [
     {
       "files": [
-        "server/*.ts"
+        "server/**/*.ts"
       ],
       "extends": [
         "eslint:recommended"
