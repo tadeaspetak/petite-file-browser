@@ -1,24 +1,17 @@
 import express from "express";
 
-const validateContentType = (req: express.Request, res: express.Response) => {
-  if (req.headers["Content-Type"] !== "application/json") {
-    res.status(400).json({ message: "Invalid content type, please use `application/json`." });
-  }
-  return true;
-};
+import { authApi } from "./auth";
+import { browseApi } from "./browse";
+import { isAuthed } from "./utils";
 
 const api = express.Router();
-api.get("/healthz", (req, res) => {
+
+api.get("/healthz/*", (req, res) => {
+  console.log({ params: req.params });
   res.send({ message: "We're live 🚀" });
 });
-api.get("/contents", (req, res) => {
-  res.send({ name: "my-directory" });
-});
 
-api.post("/sign-in", (req, res) => {
-  if (!validateContentType(req, res)) return;
-
-  // req.cookie['sessionId'] =
-});
+api.use("/auth", authApi);
+api.use("/browse", isAuthed, browseApi);
 
 export { api };
