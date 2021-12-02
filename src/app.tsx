@@ -5,6 +5,8 @@ function App() {
     (async () => {
       const response = await fetch("/api/contents");
       const json = await response.json();
+      // eslint-disable-next-line no-console
+      console.log({ json });
     })();
   }, []);
 

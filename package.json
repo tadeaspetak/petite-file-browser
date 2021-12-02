@@ -4,14 +4,13 @@
   "private": true,
   "scripts": {
     "build": "craco build",
-    "clean": "rm -rf ../my-app/node_modules & unlink yarn.lock",
     "dev": "yarn run dev:server & yarn run dev:client",
     "dev:client": "craco start",
     "dev:client:docker": "CHOKIDAR_USEPOLLING=true craco start",
     "dev:server": "nodemon server/index.ts",
     "dev:server:docker": "nodemon -L server/index.ts",
     "eject": "react-scripts eject",
-    "start:server": "NODE_ENV=prod ts-node server/index.ts",
+    "start:prod": "NODE_ENV=prod ts-node server/index.ts",
     "test": "craco test"
   },
   "browserslist": {
