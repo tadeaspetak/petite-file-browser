@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "craco build",
+    "clean": "rm -rf node_modules & unlink yarn.lock",
     "dev": "yarn run dev:server & yarn run dev:client",
     "dev:client": "craco start",
     "dev:client:docker": "CHOKIDAR_USEPOLLING=true craco start",
@@ -11,7 +12,8 @@
     "dev:server:docker": "nodemon -L server/index.ts",
     "eject": "react-scripts eject",
     "start:prod": "NODE_ENV=prod ts-node server/index.ts",
-    "test": "craco test"
+    "test": "craco test",
+    "test:server": "jest ./server"
   },
   "browserslist": {
     "production": [
@@ -30,6 +32,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "cookie-parser": "^1.4.6",
     "express": "^4.17.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -50,7 +53,9 @@
     "nodemon": "^2.0.15",
     "postcss": "^7",
     "prettier": "^2.5.0",
+    "supertest": "^6.1.6",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat",
+    "ts-jest": "^26.4.2",
     "ts-node": "^10.4.0",
     "typescript": "^4.1.2"
   },
