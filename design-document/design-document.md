@@ -89,11 +89,22 @@ To start with, let's use a self-signed certificate to enable `TLS` even on local
 
 ### Session Management
 
-To avoid depending on external libs, we'll build a simple **session management** ourselves. On signing in, we generate a random `sessionId` for the user. This is used as the `key` in the `sessions` key-value store and also set as a cookie sent back to the client. (See more on security considerations in the [XSS](#cross-site-scripting-xss) and [CSRF](#cross-site-request-forgery-csrf) sections below.)
+To avoid depending on external libs, we'll build a simple **session management** ourselves. On signing in, we generate a random `sessionId` for the user. This is used as the `key` in the `sessions` key-value store and also set as a cookie sent back to the client (`sameSite: lax`, `httpOnly: true`). (See more on security considerations in the [XSS](#cross-site-scripting-xss) and [CSRF](#cross-site-request-forgery-csrf) sections below.)
+
+### Hashing Passwords
+
+I will use `crypto.scrypt(password, salt, 64, { N: 16384 })` to compute the password hash, saving the salt alongside the result as a user property.
+
+The salt needs to be there in order to prevent identical hashes of identical passwords, the work factor / iteration count / cost parameter (`N`) to make it even more difficult for an attacker to compute hashes of all possible passwords. `scrypt` uses `pbkdf2` internally, but makes higher demands on the memory necessary to compute the hash, making brute-force attacks even less rewarding.
 
 ### Directory Traversing
 
-Since we'll be browsing real directories, we also need to make sure the user is not allowed outside their root directory. After sanitising the URL input, [path.normalize()](https://nodejs.org/api/path.html#pathnormalizepath) followed by removing any remaining `./` and `../` at the beginning of the path should suffice.
+Since we'll be browsing real directories, we also need to make sure the user is not allowed outside their root directory. Let's use [path.normalize()](https://nodejs.org/api/path.html#pathnormalizepath) in the following way:
+
+```
+const whereabouts =  path.join(basePath, path.normalize(rawPath));
+if (!whereabouts.startsWith(basePath)) return res.status(400);
+```
 
 ### Cross-Site-Scripting (XSS)
 
@@ -112,10 +123,8 @@ Since CSRF exploits are applicable only with state-changing requests, we have a 
  - Set the `sameSite` attribute of our `sessionId` cookie to `lax` to prevent it from being sent on cross-site requests (with the exception of the "safe" `GET` and `HEAD` which should never be modifying state).
 
  The above combo 👆 should actually suffice, but we might as well implement token-based mitigation for good measure and practice:
-
-  - When generating our `sessionId`, let's also generate a `csrfId`, save it as an attribute on the session, and set as a `sameSite` (but not `httpOnly` so it can be used by the client) cookie.
-  - When submitting the login form, we check the `csrfId` is included in the request header and matches the one stored with the `sessionId` (and in the `csrfId` cookie).
-  - On the frontend, we need to set the `Content-Type` appropriately, and include the `csrfId` cookie value in the headers.
+ 
+  - Once the user hits the `sign-in` view, the client will ping the API to obtain a `csrfId` token via a cookie in the response (`sameSite: strict`). This token token will be sent alongside the credentials in the JSON body and checked against the one in the cookie to verify taht the `sign-in` request is being sent from our own site.
 
 ### Security in the Real World
 
