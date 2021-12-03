@@ -1,37 +1,57 @@
 import supertest from "supertest";
 
-import { Users } from "../data";
+import { BrowserItem } from "../../common/types";
 import { app } from "../server";
-import { signIn } from "./testUtils";
+import { seedUsers, signIn } from "../testUtils";
 
 const unauthed = supertest(app);
 const authed = supertest.agent(app);
 
-// TODO: move into global setup
+const createDirItem = (name: string, items?: BrowserItem[]): BrowserItem => {
+  return { name, type: "dir", ...(items && { items }) };
+};
+const createFileItem = (name: string, sizeBytes: number, sizeHuman: string): BrowserItem => {
+  return { name, type: "file", sizeBytes, sizeHuman };
+};
+
 beforeAll(async (done) => {
-  await Users.seed([{ name: "John Doe", email: "john@petite.com", password: "a crazy one" }]);
+  await seedUsers();
   await signIn(authed);
   done();
 });
 
-it("fails to get path behind auth", async (done) => {
-  const response = await unauthed
-    .get("/api/browse/contents")
-    .set("Content-Type", "application/json");
+it("fails to get path behind auth when unauthed", async (done) => {
+  const response = await unauthed.get("/api/browse").set("Content-Type", "application/json");
 
   expect(response.status).toBe(403);
-  expect(response.body.message).toBe("Unauthorised.");
+  expect(response.body.message).toBe("Unauthorized.");
 
   done();
 });
 
 it("fetches contents", async (done) => {
   const response = await authed
-    .get("/api/browse/contents?path=/design-document")
+    .get("/api/browse?path=/design-document")
     .set("Content-Type", "application/json");
 
   expect(response.status).toBe(200);
-  expect(response.body.contents).toBe("my-directory");
+  expect(response.body).toStrictEqual({
+    items: createDirItem("design-document", [
+      createDirItem("assets"),
+      createFileItem("design-document.md", 8834, "8.63 KB"),
+    ]),
+  });
+
+  done();
+});
+
+it("fails to fetch contents of an invalid path", async (done) => {
+  const response = await authed
+    .get("/api/browse?path=../evil-stuff")
+    .set("Content-Type", "application/json");
+
+  expect(response.status).toBe(400);
+  expect(response.body.message).toBe("Invalid path.");
 
   done();
 });

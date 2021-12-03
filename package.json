@@ -4,16 +4,14 @@
   "private": true,
   "scripts": {
     "build": "craco build",
-    "clean": "rm -rf node_modules & unlink yarn.lock",
     "dev": "yarn run dev:server & yarn run dev:client",
     "dev:client": "craco start",
-    "dev:client:docker": "CHOKIDAR_USEPOLLING=true craco start",
     "dev:server": "nodemon server/index.ts",
-    "dev:server:docker": "nodemon -L server/index.ts",
     "eject": "react-scripts eject",
-    "start:prod": "NODE_ENV=prod ts-node server/index.ts",
-    "test": "craco test",
-    "test:server": "jest ./server"
+    "start:prod": "NODE_ENV=production ts-node server/index.ts",
+    "test": "yarn run test:server",
+    "test:client": "craco test",
+    "test:server": "jest -c jest.config.server.js ./server"
   },
   "browserslist": {
     "production": [
