@@ -17,16 +17,14 @@ export const signIn = async (
   request: supertest.SuperTest<supertest.Test> | supertest.SuperAgentTest,
   password = fakeUserPassword,
 ) => {
-  const response = await request
-    .post("/api/auth/sign-in-token")
-    .set("Content-Type", "application/json");
+  const response = await request.get("/index.html");
 
-  const signInToken = parseCookies(response).find((c) => c.name === "signInToken")?.value;
-  expect(signInToken).toBeDefined();
+  const doubleSubmit = parseCookies(response).find((c) => c.name === "doubleSubmit")?.value;
+  expect(doubleSubmit).toBeDefined();
 
   return request
-    .post("/api/auth/sign-in")
-    .send({ email: "john@petite.com", password, signInToken })
-    .set("Cookie", `signInToken=${signInToken}`)
+    .post("/api/auth/session")
+    .send({ email: "john@petite.com", password, doubleSubmit })
+    .set("Cookie", `doubleSubmit=${doubleSubmit}`)
     .set("Content-Type", "application/json");
 };

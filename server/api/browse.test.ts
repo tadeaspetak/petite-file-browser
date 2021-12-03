@@ -55,3 +55,14 @@ it("fails to fetch contents of an invalid path", async (done) => {
 
   done();
 });
+
+it("fails to fetch contents of a non-existing path", async (done) => {
+  const response = await authed
+    .get("/api/browse?path=/asdf")
+    .set("Content-Type", "application/json");
+
+  expect(response.status).toBe(500);
+  expect(response.body.message).toBe("Cannot read the folder at '/asdf'.");
+
+  done();
+});

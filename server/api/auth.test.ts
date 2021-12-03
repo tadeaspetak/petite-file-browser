@@ -13,39 +13,36 @@ beforeAll(async (done) => {
 });
 
 it("receives a sign in token", async (done) => {
-  const response = await unauthed
-    .post("/api/auth/sign-in-token")
-    .set("Content-Type", "application/json");
+  const response = await unauthed.get("/index.html");
 
-  const signInToken = parseCookies(response).find((c) => c.name === "signInToken");
-  expect(signInToken?.value.length).toBe(64);
-  expect(signInToken?.sameSite?.toLowerCase()).toBe("strict");
-  expect(response.body.message).toBe("Token generated.");
+  const doubleSubmit = parseCookies(response).find((c) => c.name === "doubleSubmit");
+  expect(doubleSubmit?.value.length).toBe(64);
+  expect(doubleSubmit?.sameSite?.toLowerCase()).toBe("strict");
 
   done();
 });
 
-it("fails to sign in without a sign in token", async (done) => {
+it("fails to sign in without a double submit cookie", async (done) => {
   const response = await unauthed
-    .post("/api/auth/sign-in")
+    .post("/api/auth/session")
     .send({ email: "john@petite.com", password: fakeUserPassword })
     .set("Content-Type", "application/json");
 
   expect(response.status).toBe(401);
-  expect(response.body.message).toBe("Invalid sign in token.");
+  expect(response.body.message).toBe("Invalid double submit.");
 
   done();
 });
 
-it("fails to sign in with an invalid sign in token", async (done) => {
+it("fails to sign in with an invalid double submit cookie", async (done) => {
   const response = await unauthed
-    .post("/api/auth/sign-in")
-    .send({ email: "john@petite.com", password: fakeUserPassword, signInToken: "something" })
+    .post("/api/auth/session")
+    .send({ email: "john@petite.com", password: fakeUserPassword, doubleSubmit: "something" })
     .set("Content-Type", "application/json")
-    .set("Cookie", [`signInToken=somethingelse`]);
+    .set("Cookie", [`doubleSubmit=somethingelse`]);
 
   expect(response.status).toBe(401);
-  expect(response.body.message).toBe("Invalid sign in token.");
+  expect(response.body.message).toBe("Invalid double submit.");
 
   done();
 });
@@ -86,7 +83,7 @@ it("signs out", async (done) => {
   expect(parseCookies(stillAuthed).length).toBe(2);
 
   const nowUnauthed = await localAgent
-    .post("/api/auth/sign-out")
+    .delete("/api/auth/session")
     .set("Content-Type", "application/json");
   expect(parseCookies(nowUnauthed).length).toBe(0);
   expect(nowUnauthed.status).toBe(200);
