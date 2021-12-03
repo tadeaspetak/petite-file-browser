@@ -26,5 +26,11 @@
   },
   "files": [
     "typings/express.d.ts"
+  ],
+  "include": [
+    "src",
+    "typings",
+    "server",
+    "common"
   ]
 }

@@ -20,12 +20,12 @@ const createItem = (name: string, stats: fs.Stats, items?: BrowserItem[]): Brows
 };
 
 browseApi.get("/", (req, res) => {
-  if (req.query.path && typeof req.query.path !== "string") {
-    return res.status(400).json({ message: "Invalid path." });
-  }
-
   const rawPath = (req.query.path as string) || "/";
-  if (rawPath.indexOf("\0") > -1 || !/^[a-zA-Z0-9-_/.]+$/.test(rawPath)) {
+  if (
+    typeof rawPath !== "string" ||
+    rawPath.indexOf("\0") > -1 ||
+    !/^[a-zA-Z0-9-_/.]+$/.test(rawPath)
+  ) {
     return res.status(400).json({ message: "Invalid path." });
   }
 
@@ -35,12 +35,16 @@ browseApi.get("/", (req, res) => {
   }
 
   const items: BrowserItem[] = [];
-  const children = fs.readdirSync(current);
-  for (const child of children) {
-    items.push(createItem(child, fs.statSync(path.join(current, child))));
-  }
 
-  res.send({ items: createItem(path.basename(current), fs.statSync(current), items) });
+  try {
+    const children = fs.readdirSync(current);
+    for (const child of children) {
+      items.push(createItem(child, fs.statSync(path.join(current, child))));
+    }
+    res.send({ items: createItem(path.basename(current), fs.statSync(current), items) });
+  } catch (e) {
+    res.status(500).json({ message: `Cannot read the folder at '${rawPath}'.` });
+  }
 });
 
 export { browseApi };
