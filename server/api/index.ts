@@ -1,17 +1,33 @@
 import express from "express";
 
+import { Sessions, Users } from "../models";
 import { authApi } from "./auth";
 import { browseApi } from "./browse";
-import { isAuthed } from "./utils";
 
 const api = express.Router();
 
-api.get("/healthz/*", (req, res) => {
-  console.log({ params: req.params });
-  res.send({ message: "We're live 🚀" });
+// enforce `application/json` content type on all api endpoints
+api.use((req, res, next) => {
+  if (req.headers["content-type"] !== "application/json") {
+    res.status(400).json({ message: "Invalid content type." });
+  } else {
+    next();
+  }
 });
 
 api.use("/auth", authApi);
-api.use("/browse", isAuthed, browseApi);
+api.use(
+  "/browse",
+  // make sure the user is authenticated
+  (req, res, next) => {
+    const sessionId = req.cookies["sessionId"];
+    const session = sessionId ? Sessions.findBySessionId(sessionId) : undefined;
+    if (!session) return res.status(403).json({ message: "Unauthorized." });
+
+    req.user = Users.findByEmail(session.userEmail);
+    next();
+  },
+  browseApi,
+);
 
 export { api };

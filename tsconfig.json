@@ -21,8 +21,10 @@
     "jsx": "react-jsx",
     "noImplicitAny": true
   },
-  "include": [
-    "src",
-    "server"
+  "ts-node": {
+    "files": true
+  },
+  "files": [
+    "typings/express.d.ts"
   ]
 }
