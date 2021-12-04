@@ -19,6 +19,11 @@ export interface ApiSessionReq {
   doubleSubmit: string;
 }
 
+export interface ApiSessionRes {
+  email: string;
+  name: string;
+}
+
 export interface ApiBrowseRes {
   path: string;
   name: string;

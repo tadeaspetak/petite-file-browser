@@ -2,13 +2,22 @@ import "./index.css";
 
 import React from "react";
 import ReactDOM from "react-dom";
+import { BrowserRouter } from "react-router-dom";
 
-import App from "./app";
+import App from "./App";
+import { AuthProvider } from "./providers/Auth";
+import { ToastProvider } from "./providers/Toasts";
 import reportWebVitals from "./reportWebVitals";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <ToastProvider>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </ToastProvider>
+    </BrowserRouter>
   </React.StrictMode>,
   document.getElementById("root"),
 );
