@@ -12,3 +12,15 @@ export interface BrowserDirectory {
 }
 
 export type BrowserItem = BrowserFile | BrowserDirectory;
+
+export interface ApiSessionReq {
+  email: string;
+  password: string;
+  doubleSubmit: string;
+}
+
+export interface ApiBrowseRes {
+  path: string;
+  name: string;
+  items: BrowserItem[];
+}

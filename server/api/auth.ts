@@ -1,13 +1,14 @@
 import crypto from "crypto";
 import express from "express";
 
+import { ApiSessionReq } from "../../common/types";
 import { Sessions, Users } from "../models";
 import { generateToken } from "../security";
 
 const authApi = express.Router();
 
 authApi.post("/session", async (req, res) => {
-  const params: { email: string; password: string; doubleSubmit: string } = req.body;
+  const params: ApiSessionReq = req.body;
 
   if (!params.doubleSubmit || params.doubleSubmit !== req.cookies["doubleSubmit"]) {
     return res.status(401).json({ message: "Invalid double submit." });

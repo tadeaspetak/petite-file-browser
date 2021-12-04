@@ -1,16 +1,16 @@
 import supertest from "supertest";
 
-import { BrowserItem } from "../../common/types";
+import { BrowserDirectory, BrowserFile, BrowserItem } from "../../common/types";
 import { app } from "../server";
 import { seedUsers, signIn } from "../testUtils";
 
 const unauthed = supertest(app);
 const authed = supertest.agent(app);
 
-const createDirItem = (name: string, items?: BrowserItem[]): BrowserItem => {
+const createDirItem = (name: string, items?: BrowserItem[]): BrowserDirectory => {
   return { name, type: "dir", ...(items && { items }) };
 };
-const createFileItem = (name: string, sizeBytes: number, sizeHuman: string): BrowserItem => {
+const createFileItem = (name: string, sizeBytes: number, sizeHuman: string): BrowserFile => {
   return { name, type: "file", sizeBytes, sizeHuman };
 };
 
@@ -36,10 +36,9 @@ it("fetches contents", async (done) => {
 
   expect(response.status).toBe(200);
   expect(response.body).toStrictEqual({
-    items: createDirItem("design-document", [
-      createDirItem("assets"),
-      createFileItem("design-document.md", 8834, "8.63 KB"),
-    ]),
+    path: "design-document",
+    name: "design-document",
+    items: [createDirItem("assets"), createFileItem("design-document.md", 8834, "8.63 KB")],
   });
 
   done();

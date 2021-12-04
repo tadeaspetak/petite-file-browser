@@ -2,7 +2,7 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 
-import { BrowserItem } from "../../common/types";
+import { ApiBrowseRes, BrowserItem } from "../../common/types";
 import { getHumanSize } from "../../common/utils";
 import { Logger } from "../logger";
 
@@ -16,19 +16,16 @@ const createItem = (name: string, stats: fs.Stats, items?: BrowserItem[]): Brows
 };
 
 browseApi.get("/", (req, res) => {
-  const rawPath = (req.query.path as string) || "/";
-  if (
-    typeof rawPath !== "string" ||
-    rawPath.indexOf("\0") > -1 ||
-    !/^[a-zA-Z0-9-_/.]+$/.test(rawPath)
-  ) {
-    Logger.error("Invalid 'rawPath'.", { user: req.user, basePath, rawPath });
+  const raw = (req.query.path as string) || "/";
+  if (typeof raw !== "string" || raw.indexOf("\0") > -1 || !/^[a-zA-Z0-9-_/.]+$/.test(raw)) {
+    Logger.error("Invalid 'raw' path.", { user: req.user, basePath, rawPath: raw });
     return res.status(400).json({ message: "Invalid path." });
   }
 
-  const current = path.join(basePath, path.normalize(rawPath));
+  const normalized = path.normalize(raw).replace(/^(\/|\\)+/, "");
+  const current = path.join(basePath, normalized);
   if (!current.startsWith(basePath)) {
-    Logger.error("'Current' outside of 'basePath'.", { user: req.user, basePath, rawPath });
+    Logger.error("'Current' outside of 'basePath'.", { user: req.user, basePath, raw, normalized });
     return res.status(400).json({ message: "Invalid path." });
   }
 
@@ -38,10 +35,12 @@ browseApi.get("/", (req, res) => {
     for (const child of children) {
       items.push(createItem(child, fs.statSync(path.join(current, child))));
     }
-    res.send({ items: createItem(path.basename(current), fs.statSync(current), items) });
+
+    const response: ApiBrowseRes = { path: normalized, name: path.basename(current), items };
+    res.send(response);
   } catch (e) {
-    Logger.error("Cannot read path.", { user: req.user, basePath, rawPath, current });
-    res.status(500).json({ message: `Cannot read the folder at '${rawPath}'.` });
+    Logger.error("Cannot read path.", { user: req.user, basePath, rawPath: raw, current });
+    res.status(500).json({ message: `Cannot read the folder at '${raw}'.` });
   }
 });
 
