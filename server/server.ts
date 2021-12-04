@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 
 import { api } from "./api";
+import { Logger } from "./logger";
 import { generateToken } from "./security";
 
 const app = express();
@@ -29,7 +30,7 @@ app.use("/api", api);
 
 // keep this as the last middleware to prevent leaking error specifics
 app.use(((err, req, res, next) => {
-  console.error(err.stack); // eslint-disable-line no-console
+  Logger.error(err.stack);
   res.status(500).send("Something unexpected has broken, sorry for the inconvenience 💣");
 }) as express.ErrorRequestHandler);
 

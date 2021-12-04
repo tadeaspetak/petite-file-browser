@@ -1,7 +1,14 @@
-export interface BrowserItem {
+export interface BrowserFile {
   name: string;
-  sizeBytes?: number;
-  sizeHuman?: string;
-  type: "file" | "dir";
+  type: "file";
+  sizeBytes: number;
+  sizeHuman: string;
+}
+
+export interface BrowserDirectory {
+  name: string;
+  type: "dir";
   items?: BrowserItem[];
 }
+
+export type BrowserItem = BrowserFile | BrowserDirectory;
