@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import express from "express";
 
 import { Sessions, Users } from "../models";
@@ -14,6 +15,7 @@ authApi.post("/session", async (req, res) => {
 
   const user = Users.findByEmail(params.email);
   if (!user || !Users.verifyPassword(params.password, user)) {
+    await new Promise((resolve) => setTimeout(resolve, crypto.randomInt(11, 111))); // mitigate timing attacks
     return res.status(401).json({ message: "Invalid credentials." });
   }
 

@@ -1,3 +1,5 @@
+import crypto from "crypto";
+
 import { getPasswordHash, hashPassword } from "../security";
 
 export interface User {
@@ -18,7 +20,10 @@ export class Users {
     return this.data[email];
   }
   static verifyPassword(password: string, user: User) {
-    return getPasswordHash(password, user.salt, user.iterations) === user.passwordHash;
+    return crypto.timingSafeEqual(
+      Buffer.from(getPasswordHash(password, user.salt, user.iterations)),
+      Buffer.from(user.passwordHash),
+    );
   }
   static async seed(inputs: { name: string; email: string; password: string }[]) {
     for (const input of inputs) {
