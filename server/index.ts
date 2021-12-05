@@ -12,6 +12,6 @@ const httpsOptions = {
 
 const portHttps = process.env.PORT_HTTPS || 8080;
 https.createServer(httpsOptions, app).listen(portHttps, async () => {
-  await Users.seed([{ name: "Jane Doe", email: "jane@petite.com", password: "a safe one" }]);
+  await Users.seed([{ name: "Jane Doe", email: "jane@petite.com", password: "supersafe" }]);
   console.log(`HTTPS server listening at ${portHttps}`); // eslint-disable-line no-console
 });

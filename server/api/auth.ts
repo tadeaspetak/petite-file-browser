@@ -3,7 +3,7 @@ import express from "express";
 
 import { ApiSessionReq, ApiSessionRes } from "../../common/types";
 import { Sessions, Users } from "../models";
-import { generateToken } from "../security";
+import { attachDoubleSubmit, generateToken } from "../security";
 
 const authApi = express.Router();
 
@@ -11,6 +11,7 @@ authApi.post("/session", async (req, res) => {
   const params: ApiSessionReq = req.body;
 
   if (!params.doubleSubmit || params.doubleSubmit !== req.cookies["doubleSubmit"]) {
+    await attachDoubleSubmit(res); // reattach since the only reasonable explanation is that the double submit cookie has expired
     return res.status(400).json({ message: "Invalid double submit." });
   }
 

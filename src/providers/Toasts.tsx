@@ -16,8 +16,8 @@ interface ToastOptions {
 
 type ToastContextType = {
   toasts: Toast[];
-  add: (body: string, type: ToastType, options?: ToastOptions) => void;
-  remove: (id: string) => void;
+  toast: (body: string, type: ToastType, options?: ToastOptions) => void;
+  untoast: (id: string) => void;
 };
 
 export const ToastContext = React.createContext<ToastContextType>(null!);
@@ -53,9 +53,9 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
     },
   ]);
 
-  const remove = useCallback((id: string) => setToasts(rm(toasts, id)), [toasts]);
+  const untoast = useCallback((id: string) => setToasts(rm(toasts, id)), [toasts]);
 
-  const add = useCallback(
+  const toast = useCallback(
     (body: string, type: ToastType, { id, hideIn = 5000 }: ToastOptions = {}) => {
       const next = id ? rm(toasts, id) : toasts;
       setToasts([...next, { id: id || getRandomString(6), body, type, hideIn }]);
@@ -63,7 +63,9 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
     [toasts],
   );
 
-  return <ToastContext.Provider value={{ toasts, add, remove }}>{children}</ToastContext.Provider>;
+  return (
+    <ToastContext.Provider value={{ toasts, toast, untoast }}>{children}</ToastContext.Provider>
+  );
 };
 
 export function useToasts() {

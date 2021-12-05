@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo } from "react";
 
 import { ApiSessionReq, ApiSessionRes } from "../../common/types";
-import { getCookie, setCookie } from "../utils";
+import { getCookie } from "../utils";
 
-enum AuthResult {
+export enum AuthResult {
   INVALID_DOUBLE_SUBMIT,
   INVALID_CREDENTIALS,
   SUCCESS,
   UNKNOWN_ERROR,
+  NETWORK_ERROR,
 }
 
 type User = ApiSessionRes;
@@ -36,13 +37,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      let doubleSubmit = getCookie("doubleSubmit");
+      const doubleSubmit = getCookie("doubleSubmit") ?? "";
 
-      // fake in dev
-      if (!doubleSubmit) {
-        doubleSubmit = "fakeDoubleSubmit";
-        setCookie("doubleSubmit", doubleSubmit, 60 * 60 * 1000);
-      }
+      // // fake in dev
+      // if (!doubleSubmit) {
+      //   doubleSubmit = "fakeDoubleSubmit";
+      //   setCookie("doubleSubmit", doubleSubmit + "d", 60 * 60 * 1000);
+      // }
 
       const params: ApiSessionReq = { email, password, doubleSubmit };
 
@@ -64,11 +65,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(json);
 
           return AuthResult.SUCCESS;
+        default:
+          console.error(response); // eslint-disable-line no-console
+          return AuthResult.UNKNOWN_ERROR;
       }
     } catch (e) {
       console.error(e); // eslint-disable-line no-console
-    } finally {
-      return AuthResult.UNKNOWN_ERROR;
+      return AuthResult.NETWORK_ERROR;
     }
   };
 
@@ -82,8 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.removeItem("user");
       setUser(undefined);
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
+      console.error(e); // eslint-disable-line no-console
     }
   };
 

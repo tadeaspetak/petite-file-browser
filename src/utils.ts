@@ -36,3 +36,18 @@ export function getCookie(name: string) {
   }
   return null;
 }
+
+// a super simple replacement for the standard `classnames`
+export const classNames = (...args: Array<string | { [key: string]: boolean }>): string =>
+  args
+    .reduce<string>((acc, arg) => {
+      if (typeof arg === "object") {
+        const [name, applicable] = Object.entries(arg)[0];
+        if (applicable) acc += " " + name;
+      } else {
+        acc += " " + arg;
+      }
+      return acc;
+    }, "")
+    .replaceAll(/\s+/g, " ")
+    .trim();

@@ -1,11 +1,9 @@
-import { faBullseye, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useRef, useState } from "react";
-import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { useRef } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
-import { Button } from "./components/Button";
-import { Toaster } from "./components/Toaster";
-import { useAuth } from "./providers/Auth";
+import { Toaster } from "./components";
+import { Header } from "./layout";
+import { useAuth } from "./providers";
 import { Browse, SignIn } from "./views";
 
 const Protected = ({ children }: { children: JSX.Element }) => {
@@ -22,43 +20,14 @@ const Protected = ({ children }: { children: JSX.Element }) => {
   );
 };
 
-const Header: React.FC = ({ children }) => {
-  const { isAuthenticated, signOut } = useAuth();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-
+export const App: React.FC = () => {
   return (
-    <header className="bg-gray-100 mb-8 w-full flex justify-center p-2 border-b border-gray-200 h-10">
-      <div className="max-w-md w-full flex justify-between items-center">
-        <div>
-          <FontAwesomeIcon icon={faBullseye} className="mr-1" />
-          <Link to="/browse">Petite</Link>
-        </div>
-        {isAuthenticated && (
-          <Button
-            hint="Sign Out"
-            icon={faSignOutAlt}
-            loading={isSigningOut}
-            onClick={async () => {
-              setIsSigningOut(true);
-              await signOut();
-              setIsSigningOut(false);
-            }}
-            size="sm"
-          />
-        )}
-      </div>
-    </header>
-  );
-};
-
-function App() {
-  return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-full h-full text-white bg-gray-800">
       <Toaster />
       <Header />
-      <div className="max-w-md">
+      <div className="max-w-md px-2">
         <Routes>
-          <Route path="/sign-in" element={<SignIn />} />
+          <Route path="/sign-in/*" element={<SignIn />} />
           <Route
             path="/browse/*"
             element={
@@ -72,6 +41,4 @@ function App() {
       </div>
     </div>
   );
-}
-
-export default App;
+};

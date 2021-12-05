@@ -1,12 +1,11 @@
 export const Spinner: React.FC<{
   className?: string;
   color?: string;
-  size: 4 | 6 | 8 | 12 | 16 | 24;
   stroke?: number;
-}> = ({ className = "", color = "text-black", size, stroke = 1 }) => {
+}> = ({ className = "", color = "text-black", stroke = 1 }) => {
   return (
     <svg
-      className={`${color} mx-auto animate-spin w-${size} ${className}`}
+      className={`${color} mx-auto animate-spin ${className}`}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="-2 -2 28 28"
