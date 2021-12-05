@@ -10,9 +10,9 @@
     "dev": "yarn run dev:server & yarn run dev:client",
     "dev:client": "INLINE_RUNTIME_CHUNK=false craco start",
     "dev:server": "nodemon server/index.ts",
-    "docker": "yarn run build && yarn run start:prod",
     "eject": "react-scripts eject",
-    "start:prod": "NODE_ENV=production ts-node server/index.ts",
+    "start": "yarn run build && yarn run start:server",
+    "start:server": "NODE_ENV=production ts-node server/index.ts",
     "test": "yarn run test:server",
     "test:client": "craco test",
     "test:server": "jest -c jest.config.server.js ./server"

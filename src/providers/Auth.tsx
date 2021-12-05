@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 
 import { ApiSessionReq, ApiSessionRes } from "../../common/types";
 import { getCookie } from "../utils";
@@ -24,7 +24,8 @@ let AuthContext = React.createContext<AuthContextType>(null!);
 
 const getPersistedUser = () => localStorage.getItem("user");
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  let [user, setUser] = React.useState<User | undefined>();
+  const [user, setUser] = React.useState<User | undefined>();
+  const retriedDoubleSubmit = useRef(false);
 
   useEffect(() => {
     const user = getPersistedUser();
@@ -35,17 +36,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return user || getPersistedUser() ? true : false; // components mount faster than the hook above evaluates
   }, [user]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<AuthResult> => {
     try {
-      const doubleSubmit = getCookie("doubleSubmit") ?? "";
-
-      // // fake in dev
-      // if (!doubleSubmit) {
-      //   doubleSubmit = "fakeDoubleSubmit";
-      //   setCookie("doubleSubmit", doubleSubmit + "d", 60 * 60 * 1000);
-      // }
-
-      const params: ApiSessionReq = { email, password, doubleSubmit };
+      const params: ApiSessionReq = {
+        email,
+        password,
+        doubleSubmit: getCookie("doubleSubmit") ?? "",
+      };
 
       const response = await fetch("/api/auth/session", {
         method: "POST",
@@ -55,12 +52,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       switch (response.status) {
         case 400:
-          return AuthResult.INVALID_DOUBLE_SUBMIT;
+          // implies the double submit cookie must have expired, let's try once more
+          if (!retriedDoubleSubmit.current) {
+            console.log("retrying double submit..."); // eslint-disable-line no-console
+            retriedDoubleSubmit.current = true;
+            return signIn(email, password);
+          }
+          console.error("Double submit unsuccessful on a retry, should be impossible?", response); // eslint-disable-line no-console
+          return AuthResult.UNKNOWN_ERROR;
         case 401:
           return AuthResult.INVALID_CREDENTIALS;
         case 200:
           const json: ApiSessionRes = await response.json();
 
+          retriedDoubleSubmit.current = false;
           localStorage.setItem("user", JSON.stringify(json));
           setUser(json);
 
