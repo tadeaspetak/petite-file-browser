@@ -32,26 +32,7 @@ const rm = (toasts: Toast[], id: string) => {
 };
 
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
-  const [toasts, setToasts] = useState<Toast[]>([
-    {
-      id: "success",
-      body: "I am successful. This is a wonderful message.",
-      type: "success",
-      hideIn: 0,
-    },
-    {
-      id: "error",
-      body: "I am erroneous. This is a wonderful message.",
-      type: "error",
-      hideIn: 0,
-    },
-    {
-      id: "info",
-      body: "I am informative. This is a wonderful mess, oh really yes!",
-      type: "info",
-      hideIn: 0,
-    },
-  ]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   const untoast = useCallback((id: string) => setToasts(rm(toasts, id)), [toasts]);
 

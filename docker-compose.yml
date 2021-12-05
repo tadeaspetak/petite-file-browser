@@ -6,6 +6,6 @@ services:
     volumes:
       - /app/node_modules
       - ./:/app
-    command: yarn docker
+    command: yarn run docker
     ports:
       - "8080:8080"

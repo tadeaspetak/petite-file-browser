@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "build": "NODE_ENV=production INLINE_RUNTIME_CHUNK=false craco build",
+    "clean": "yarn run clean:build && yarn run clean:deps",
+    "clean:build": "rm -rf .build",
+    "clean:deps": "rm -rf node_modules",
     "dev": "yarn run dev:server & yarn run dev:client",
     "dev:client": "INLINE_RUNTIME_CHUNK=false craco start",
     "dev:server": "nodemon server/index.ts",
