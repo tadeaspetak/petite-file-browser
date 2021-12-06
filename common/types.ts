@@ -25,6 +25,7 @@ export interface ApiSessionRes {
 }
 
 export interface ApiBrowseRes {
+  isRoot: boolean;
   path: string;
   name: string;
   items: BrowserItem[];

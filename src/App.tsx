@@ -25,7 +25,7 @@ export const App: React.FC = () => {
     <div className="flex flex-col items-center w-full h-full text-white bg-gray-800">
       <Toaster />
       <Header />
-      <div className="max-w-md px-2">
+      <div className="w-full max-w-md px-2">
         <Routes>
           <Route path="/sign-in/*" element={<SignIn />} />
           <Route
