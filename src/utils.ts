@@ -37,6 +37,10 @@ export function getCookie(name: string) {
   return null;
 }
 
+export const joinUrl = (...parts: string[]) => {
+  return parts.join("/").replace(/\/+/gi, "/").replace(":/", "://").replace(/\/$/, "");
+};
+
 // a super simple replacement for the standard `classnames`
 export const classNames = (...args: Array<string | { [key: string]: boolean }>): string =>
   args
