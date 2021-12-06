@@ -13,7 +13,7 @@ export const Header: React.FC = () => {
 
   return (
     <header className="flex justify-center w-full h-10 p-2 mb-8 bg-gray-900 shadow-lg">
-      <div className="flex items-center justify-between w-full max-w-md">
+      <div className="flex items-center justify-between w-full max-w-2xl px-2">
         <div onClick={() => navigate("/browse")} className="cursor-pointer ">
           <FontAwesomeIcon icon={faBullseye} className="mr-1" />
           <span>Petite</span>

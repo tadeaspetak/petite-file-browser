@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { ApiSessionReq, ApiSessionRes } from "../../common/types";
 import { getCookie } from "../utils";
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return user || getPersistedUser() ? true : false; // components mount faster than the hook above evaluates
   }, [user]);
 
-  const signIn = async (email: string, password: string): Promise<AuthResult> => {
+  const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     try {
       const params: ApiSessionReq = {
         email,
@@ -78,9 +78,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error(e); // eslint-disable-line no-console
       return AuthResult.NETWORK_ERROR;
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       await fetch("/api/auth/session", {
         method: "DELETE",
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (e) {
       console.error(e); // eslint-disable-line no-console
     }
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, signIn, signOut, user }}>

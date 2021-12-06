@@ -21,7 +21,7 @@ export const SignIn: React.FC = () => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <>
+    <div className="mx-auto">
       <Routes>
         <Route
           path="forgotten"
@@ -123,6 +123,6 @@ export const SignIn: React.FC = () => {
           Forgot your password?
         </Link>
       </form>
-    </>
+    </div>
   );
 };
