@@ -1,5 +1,5 @@
+import { useTimeout } from "../hooks";
 import { Toast, ToastType, useToasts } from "../providers/Toasts";
-import { useTimeout } from "../utils";
 
 const colors: { [key in ToastType]: [string, string] } = {
   info: ["bg-blue-500", "border-blue-700"],

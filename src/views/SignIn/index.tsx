@@ -84,7 +84,7 @@ export const SignIn: React.FC = () => {
           </label>
           <input
             required
-            className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none"
+            className="w-full px-3 py-2 text-gray-700 border rounded shadow appearance-none focus:outline-none"
             id="email"
             type="email"
             placeholder="Email"
@@ -100,7 +100,7 @@ export const SignIn: React.FC = () => {
           </label>
           <input
             required
-            className="w-full px-3 py-2 mb-3 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none"
+            className="w-full px-3 py-2 mb-3 text-gray-700 border rounded shadow appearance-none focus:outline-none"
             id="password"
             type="password"
             placeholder="Password"
