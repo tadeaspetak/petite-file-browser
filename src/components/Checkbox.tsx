@@ -1,10 +1,11 @@
-export const Checkbox: React.FC<{ checked: boolean; onChange: () => void }> = ({
+export const Checkbox: React.FC<{ checked: boolean; label: string; onChange: () => void }> = ({
   checked,
+  label,
   onChange,
 }) => {
   return (
     <label className="flex p-2 text-white cursor-pointer">
-      <div className="flex items-center justify-center w-6 h-6 p-1 mr-2 text-indigo-700 bg-white rounded shadow">
+      <div className="flex items-center justify-center w-6 h-6 p-1 mr-2 text-indigo-500 bg-white rounded shadow">
         <input type="checkbox" className="hidden" value="" onChange={onChange} />
         <svg
           className={`w-4 h-4 pointer-events-none text-purple ${checked ? "block" : "hidden"}`}
@@ -29,7 +30,7 @@ export const Checkbox: React.FC<{ checked: boolean; onChange: () => void }> = ({
           </g>
         </svg>
       </div>
-      <span className="select-none">Show directories first</span>
+      <span className="select-none">{label}</span>
     </label>
   );
 };

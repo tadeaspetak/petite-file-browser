@@ -2,6 +2,7 @@ import { useCallback } from "react";
 
 import { useAuth, useToasts } from "../providers";
 
+// TODO: figure out how to handle the common vs unexpected errors
 export const useSmartFetch = () => {
   const { signOut } = useAuth();
   const { toast } = useToasts();

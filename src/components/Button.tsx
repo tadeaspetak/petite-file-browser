@@ -49,7 +49,7 @@ export const Button: React.FC<ButtonProps> = ({
         className,
         { "text-sm": isSmall },
         { [`rounded-full ${isSmall ? "w-6 h-6" : "w-10 h-10"}`]: round },
-        { [`${isSmall ? "py-1 px-3" : "py-2 px-6"}`]: !round },
+        { [`${isSmall ? "py-1 px-3" : "py-2 px-5"}`]: !round },
         { [`${colors[kind][0]} cursor-not-allowed`]: isDisabled },
         { [`${colors[kind][1]} hover:${colors[kind][2]}`]: !isDisabled },
       )}

@@ -25,11 +25,7 @@ export const joinUrl = (...parts: string[]) => {
   return parts.join("/").replace(/\/+/gi, "/").replace(":/", "://").replace(/\/$/, "");
 };
 
-export const setOrDeleteParam = (
-  params: URLSearchParams,
-  name: string,
-  value: string | undefined,
-) => {
+export const setOrDeleteParam = (params: URLSearchParams, name: string, value?: string) => {
   if (value) {
     params.set(name, value);
   } else {
