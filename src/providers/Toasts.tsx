@@ -34,14 +34,16 @@ const rm = (toasts: Toast[], id: string) => {
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const untoast = useCallback((id: string) => setToasts(rm(toasts, id)), [toasts]);
+  const untoast = useCallback((id: string) => setToasts((toasts) => rm(toasts, id)), []);
 
   const toast = useCallback(
     (body: string, type: ToastType, { id, hideIn = 5000 }: ToastOptions = {}) => {
-      const next = id ? rm(toasts, id) : toasts;
-      setToasts([...next, { id: id || getRandomString(6), body, type, hideIn }]);
+      setToasts((toasts) => {
+        const next = id ? rm(toasts, id) : toasts;
+        return [...next, { id: id || getRandomString(6), body, type, hideIn }];
+      });
     },
-    [toasts],
+    [],
   );
 
   return (
