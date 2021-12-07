@@ -2,17 +2,18 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 
-import { ApiBrowseRes, BrowserItem } from "../../common/types";
-import { getHumanSize } from "../../common/utils";
+import { ApiBrowseRes, BrowserItem } from "../../src/common/types";
+import { getHumanSize } from "../../src/common/utils";
 import { Logger } from "../logger";
 
 const basePath = path.join(__dirname, "../../");
 const browseApi = express.Router();
 
 const createItem = (name: string, stats: fs.Stats, items?: BrowserItem[]): BrowserItem => {
+  const base = { createdAt: stats.birthtimeMs, updatedAt: stats.ctimeMs };
   return stats.isDirectory()
-    ? { name, type: "dir", ...(items && { items }) }
-    : { name, type: "file", sizeBytes: stats.size, sizeHuman: getHumanSize(stats.size) };
+    ? { ...base, name, type: "dir", ...(items && { items }) }
+    : { ...base, name, type: "file", sizeBytes: stats.size, sizeHuman: getHumanSize(stats.size) };
 };
 
 browseApi.get("/", (req, res) => {
@@ -27,6 +28,10 @@ browseApi.get("/", (req, res) => {
   if (!current.startsWith(basePath)) {
     Logger.error("'Current' outside of 'basePath'.", { user: req.user, basePath, raw, normalized });
     return res.status(400).json({ message: "Invalid path." });
+  }
+
+  if (!fs.existsSync(current)) {
+    return res.status(404).json({ message: `Directory '${normalized}' not found.` });
   }
 
   try {

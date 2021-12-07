@@ -4,16 +4,17 @@ import {
   faLongArrowAltUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
-import { SortColumn, Sorting, SortingColumn } from "./useSort";
+import { SortingColumnName, useSort } from "../providers";
 
 export const HeaderCell: React.FC<{
   className?: string;
-  name: SortingColumn;
-  sort: SortColumn;
-  sorting: Sorting | undefined;
-}> = ({ children, className, name, sort, sorting }) => {
+  name: SortingColumnName;
+  sortable?: boolean;
+}> = ({ children, className, name, sortable = true }) => {
+  const { sortColumn, sorting } = useSort();
+
   const [icon, iconColor] = useMemo(() => {
     if (sorting && sorting.column === name) {
       return sorting.direction === "asc"
@@ -23,16 +24,19 @@ export const HeaderCell: React.FC<{
     return [faArrowsAltV, "text-gray-600"];
   }, [name, sorting]);
 
+  const sort = useCallback(() => {
+    if (sortable) sortColumn(name);
+  }, [name, sortable, sortColumn]);
+
   return (
-    <th
-      className={`p-3 whitespace-nowrap cursor-pointer select-none ${className}`}
-      onClick={() => void sort(name)}
-    >
+    <th className={`p-3 select-none ${className} ${sortable && "cursor-pointer"}`} onClick={sort}>
       <div className="flex items-center">
         {children}
-        <span className={`ml-2 ${iconColor}`}>
-          <FontAwesomeIcon icon={icon} />
-        </span>
+        {sortable && (
+          <span className={`ml-2 ${iconColor}`}>
+            <FontAwesomeIcon icon={icon} />
+          </span>
+        )}
       </div>
     </th>
   );

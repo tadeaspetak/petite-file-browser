@@ -5,20 +5,12 @@ import ReactDOM from "react-dom";
 import { classNames } from "../utils";
 import { Button } from "./Button";
 
-export interface ModalProps {
+const Wrapper: React.FC<{
   closeOnClickOutside?: boolean;
   closeOnEsc?: boolean;
   isOpen?: boolean;
   onClose: () => void;
-}
-
-const Wrapper: React.FC<ModalProps> = ({
-  children,
-  closeOnClickOutside = true,
-  closeOnEsc = true,
-  isOpen = true,
-  onClose,
-}) => {
+}> = ({ children, closeOnClickOutside = true, closeOnEsc = true, isOpen = true, onClose }) => {
   const portal = useRef(document.createElement("div"));
   useEffect(() => {
     const current = portal.current;
@@ -32,6 +24,7 @@ const Wrapper: React.FC<ModalProps> = ({
     },
     [closeOnEsc, isOpen, onClose],
   );
+
   useEffect(() => {
     window.addEventListener("keydown", handleKeyPress);
     return () => void window.removeEventListener("keydown", handleKeyPress);

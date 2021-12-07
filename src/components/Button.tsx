@@ -42,6 +42,7 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const isDisabled = useMemo(() => disabled || loading, [disabled, loading]);
   const isSmall = useMemo(() => size === "sm", [size]);
+
   return (
     <button
       className={classNames(
@@ -63,7 +64,7 @@ export const Button: React.FC<ButtonProps> = ({
           <Spinner className={`${isSmall ? "w-4" : "w-6"} text-black`} stroke={2} />
         </span>
       )}
-      <span className={`${loading ? "invisible" : ""}`}>
+      <span className={classNames({ invisible: loading })}>
         {icon && <FontAwesomeIcon icon={icon} />}
         {label && label}
       </span>

@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import express from "express";
 
-import { ApiSessionReq, ApiSessionRes } from "../../common/types";
+import { ApiSessionReq, ApiSessionRes } from "../../src/common/types";
 import { Sessions, Users } from "../models";
 import { attachCsrfToken, generateToken } from "../security";
 

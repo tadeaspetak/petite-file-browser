@@ -22,7 +22,7 @@ const Protected = ({ children }: { children: JSX.Element }) => {
 
 export const App: React.FC = () => {
   return (
-    <div className="flex flex-col items-center w-full h-full text-white bg-gray-800">
+    <div className="flex flex-col items-center w-full h-full pb-12 text-white bg-gray-800">
       <Toaster />
       <Header />
       <div className="flex w-full max-w-2xl px-2">

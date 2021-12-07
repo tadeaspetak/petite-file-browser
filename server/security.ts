@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import express from "express";
+
 export const generateToken = async (): Promise<string> =>
   new Promise((resolve, reject) => {
     crypto.randomBytes(32, (err, buffer) => (err ? reject(err) : resolve(buffer.toString("hex"))));

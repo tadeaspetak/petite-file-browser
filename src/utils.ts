@@ -34,6 +34,8 @@ export const setOrDeleteParam = (params: URLSearchParams, name: string, value?: 
   return params;
 };
 
+export const isMac = () => navigator.userAgent.toLowerCase().indexOf("mac") !== -1;
+
 // a super simple replacement for the standard `classnames`
 export const classNames = (...args: Array<string | { [key: string]: boolean }>): string =>
   args

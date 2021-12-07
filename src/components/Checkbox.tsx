@@ -4,9 +4,12 @@ export const Checkbox: React.FC<{ checked: boolean; label: string; onChange: () 
   onChange,
 }) => {
   return (
-    <label className="flex p-2 text-white cursor-pointer">
-      <div className="flex items-center justify-center w-6 h-6 p-1 mr-2 text-indigo-500 bg-white rounded shadow">
-        <input type="checkbox" className="hidden" value="" onChange={onChange} />
+    <label className="flex items-center p-2 text-xs text-white cursor-pointer">
+      <div
+        className="flex items-center justify-center w-4 h-4 mr-1 text-indigo-500 bg-white rounded shadow"
+        style={{ padding: "2px" }}
+      >
+        <input type="checkbox" className="hidden" value={`${checked}`} onChange={onChange} />
         <svg
           className={`w-4 h-4 pointer-events-none text-purple ${checked ? "block" : "hidden"}`}
           viewBox="0 0 172 172"

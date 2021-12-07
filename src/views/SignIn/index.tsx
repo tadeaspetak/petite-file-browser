@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import { Button } from "../../components";
-import { AuthResult, useAuth, useToasts } from "../../providers";
+import { useAuth, useToasts } from "../../providers";
 import { ForgottenPassword } from "./ForgottenPassword";
 
 export const SignIn: React.FC = () => {
@@ -22,34 +22,13 @@ export const SignIn: React.FC = () => {
 
       const response = await signIn(email, password);
       setIsSubmitting(false);
-      switch (response) {
-        case AuthResult.INVALID_CSRF:
-          toast(
-            "You must have had this window open for a loooong time. Please trying signing in once more.",
-            "error",
-            { id: "sign-in-error" },
-          );
+      switch (response.status) {
+        case "unauthorized":
+          toast("Invalid credentials.", "error", { id: "sign-in" });
           break;
-        case AuthResult.INVALID_CREDENTIALS:
-          toast("Invalid credentials.", "error", { id: "sign-in-error" });
-          break;
-        case AuthResult.SUCCESS:
+        case "ok":
           untoast("sign-in-error");
           navigate(location.state?.from?.pathname || "/browse", { replace: true });
-          break;
-        case AuthResult.NETWORK_ERROR:
-          toast(
-            "We couldn't connect to the server. Please, check your connection, or try again in a short while.",
-            "error",
-            { id: "sign-in-error" },
-          );
-          break;
-        case AuthResult.UNKNOWN_ERROR:
-          toast(
-            "Something unexpected has gone out of whack, please try again in a few moments.",
-            "error",
-            { id: "sign-in-error" },
-          );
           break;
       }
     },
@@ -62,7 +41,7 @@ export const SignIn: React.FC = () => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="mx-auto">
+    <div className="mx-auto mt-8">
       <Routes>
         <Route
           path="forgotten"

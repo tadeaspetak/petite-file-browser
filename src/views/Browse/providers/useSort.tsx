@@ -1,29 +1,42 @@
+import React, { ReactNode, useContext } from "react";
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { BrowserItem } from "../../../../common/types";
+import { BrowserItem } from "../../../common/types";
 import { setOrDeleteParam } from "../../../utils";
 
-export const columnNames = ["name", "type", "size"] as const;
-export type SortingColumn = typeof columnNames[number];
+export const sortingColumnNames = ["name", "type", "size"] as const;
+export type SortingColumnName = typeof sortingColumnNames[number];
 
-const directionNames = ["asc", "desc"];
-export type SortingDirection = typeof directionNames[number];
+const sortingDirectionNames = ["asc", "desc"];
+export type SortingDirectionName = typeof sortingDirectionNames[number];
 
 export interface Sorting {
-  column: SortingColumn;
-  direction: SortingDirection;
+  column: SortingColumnName;
+  direction: SortingDirectionName;
 }
-export type SortColumn = (column: SortingColumn) => void;
 
-export const useSort = () => {
+export type SortColumn = (column: SortingColumnName) => void;
+
+type SortContextType = {
+  dirsFirst: boolean;
+  setDirsFirst: (value: boolean) => void;
+
+  sorting?: Sorting;
+  sortColumn: (column: SortingColumnName) => void;
+  setSorting: (sorting?: Sorting) => void;
+
+  applySorting: (items: BrowserItem[]) => BrowserItem[];
+};
+
+export const SortContext = React.createContext<SortContextType>(null!);
+
+export const SortProvider = ({ children }: { children: ReactNode }) => {
   const [params, setParams] = useSearchParams();
 
-  const dirsFirst: boolean = useMemo(() => !!params.get("dirsFirst"), [params]);
+  const dirsFirst: boolean = useMemo(() => !!params.get("dirs"), [params]);
   const setDirsFirstInternal = useCallback(
-    (value: boolean) => {
-      setParams(setOrDeleteParam(params, "dirsFirst", value ? "true" : undefined));
-    },
+    (value: boolean) => setParams(setOrDeleteParam(params, "dirs", value ? "true" : undefined)),
     [params, setParams],
   );
 
@@ -32,17 +45,15 @@ export const useSort = () => {
     const hyphenIndex = sortParam?.lastIndexOf("-") ?? -1;
     if (!sortParam || hyphenIndex === -1) return;
 
-    const column = sortParam.substring(0, hyphenIndex) as SortingColumn;
-    if (!columnNames.includes(column)) {
+    const column = sortParam.substring(0, hyphenIndex) as SortingColumnName;
+    if (!sortingColumnNames.includes(column)) {
       console.error(`Invalid sorting column ${column}.`); // eslint-disable-line no-console
-      // setParams(setOrDeleteParam(params, "sort"));
       return;
     }
 
-    const direction = sortParam.substring(hyphenIndex + 1) as SortingDirection;
-    if (!directionNames.includes(direction)) {
+    const direction = sortParam.substring(hyphenIndex + 1) as SortingDirectionName;
+    if (!sortingDirectionNames.includes(direction)) {
       console.error(`Invalid sorting direction ${direction}.`); // eslint-disable-line no-console
-      // setParams(setOrDeleteParam(params, "sort"));
       return;
     }
 
@@ -64,7 +75,7 @@ export const useSort = () => {
   );
 
   const sortColumn = useCallback(
-    (column: SortingColumn) => {
+    (column: SortingColumnName) => {
       const next =
         !sorting || sorting.column !== column
           ? { column, direction: "asc" }
@@ -74,6 +85,14 @@ export const useSort = () => {
       setSorting(next);
     },
     [sorting, setSorting],
+  );
+
+  const setDirsFirst = useCallback(
+    (value: boolean) => {
+      if (sorting?.column === "type") setSorting(undefined);
+      setDirsFirstInternal(value);
+    },
+    [setDirsFirstInternal, sorting, setSorting],
   );
 
   const applySorting = useCallback(
@@ -97,18 +116,22 @@ export const useSort = () => {
     [sorting, dirsFirst],
   );
 
-  return {
-    applySorting,
-    dirsFirst,
-    setDirsFirst: useCallback(
-      (value: boolean) => {
-        if (sorting?.column === "type") setSorting(undefined);
-        setDirsFirstInternal(value);
-      },
-      [setDirsFirstInternal, sorting, setSorting],
-    ),
-    setSorting,
-    sortColumn,
-    sorting,
-  };
+  return (
+    <SortContext.Provider
+      value={{
+        applySorting,
+        dirsFirst,
+        setDirsFirst,
+        setSorting,
+        sortColumn,
+        sorting,
+      }}
+    >
+      {children}
+    </SortContext.Provider>
+  );
 };
+
+export function useSort() {
+  return useContext(SortContext);
+}

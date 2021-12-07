@@ -6,6 +6,20 @@
   min-height: 100vh;
 }
 
-.three-way-toggle input:checked ~ span {
+.three-way-switch input:checked ~ span {
   opacity: 1;
+}
+
+.range-slider ::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.range-slider ::-webkit-slider-thumb {
+  @apply relative w-4 h-4 mt-2 bg-gray-200 border-0 rounded-full shadow-2xl cursor-pointer;
+  pointer-events: all;
+}
+.range-slider ::-moz-range-thumb {
+  @apply relative w-4 h-4 mt-2 bg-gray-200 border-0 rounded-full shadow-2xl cursor-pointer;
+  pointer-events: all;
 }

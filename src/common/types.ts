@@ -1,11 +1,16 @@
-export interface BrowserFile {
+interface BrowserItemBase {
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface BrowserFile extends BrowserItemBase {
   name: string;
   type: "file";
   sizeBytes: number;
   sizeHuman: string;
 }
 
-export interface BrowserDirectory {
+export interface BrowserDirectory extends BrowserItemBase {
   name: string;
   type: "dir";
   items?: BrowserItem[];

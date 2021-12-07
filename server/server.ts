@@ -10,11 +10,7 @@ import { attachCsrfToken } from "./security";
 
 const app = express();
 // avoid having to manually tweak CSP, HSTS, X-Powered-By, MIME-sniffing, etc.
-app.use(
-  helmet({
-    contentSecurityPolicy: { directives: { defaultSrc: "'self'" } },
-  }),
-);
+app.use(helmet({ contentSecurityPolicy: { directives: { defaultSrc: "'self'" } } }));
 app.use(express.json());
 app.use(cookieParser());
 
