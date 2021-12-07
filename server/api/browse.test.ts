@@ -2,30 +2,12 @@ import fs from "fs";
 import path from "path";
 import supertest from "supertest";
 
-import { BrowserDirectory, BrowserFile, BrowserItem } from "../../src/common/types";
+import { createDirItem, createFileItem } from "../../src/common/testUtils";
 import { app } from "../server";
 import { seedUsers, signIn } from "../testUtils";
 
 const unauthed = supertest(app);
 const authed = supertest.agent(app);
-
-const createDirItem = (
-  name: string,
-  createdAt: number,
-  updatedAt: number,
-  items?: BrowserItem[],
-): BrowserDirectory => {
-  return { name, type: "dir", createdAt, updatedAt, ...(items && { items }) };
-};
-const createFileItem = (
-  name: string,
-  sizeBytes: number,
-  sizeHuman: string,
-  createdAt: number,
-  updatedAt: number,
-): BrowserFile => {
-  return { name, type: "file", createdAt, updatedAt, sizeBytes, sizeHuman };
-};
 
 beforeAll(async (done) => {
   await seedUsers();
