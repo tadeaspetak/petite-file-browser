@@ -5,3 +5,7 @@
 #root, #root > div {
   min-height: 100vh;
 }
+
+.three-way-toggle input:checked ~ span {
+  opacity: 1;
+}

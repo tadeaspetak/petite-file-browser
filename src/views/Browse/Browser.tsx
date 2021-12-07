@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { ApiBrowseRes } from "../../../common/types";
-import { Button, Checkbox, Spinner } from "../../components";
+import { Button, Checkbox, Spinner, ThreeWaySwitch } from "../../components";
 import { useSmartFetch } from "../../hooks";
 import { classNames, joinUrl } from "../../utils";
 import { HeaderCell, useFilter, useSort } from "./components";
@@ -66,14 +66,15 @@ export const Browser: React.FC = () => {
             value={filter}
           />
         </label>
-        <Button
+        {/* <Button
           icon={faSlidersH}
           kind="secondary"
           size="md"
           onClick={() => {
             setIsFilterOpen(true);
           }}
-        />
+        /> */}
+        <ThreeWaySwitch />
       </div>
 
       <div className="flex justify-end mb-8">
