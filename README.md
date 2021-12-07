@@ -35,5 +35,3 @@ To see the tests pass (🤞), go with the standard:
 ```sh
 yarn test
 ```
-
- Note that right now, we only have tests for the server, but it's about to change soon enough.
