@@ -16,6 +16,6 @@ export const hashPassword = async (password: string) => {
 export const getPasswordHash = (password: string, salt: string, iterations: number): string =>
   crypto.scryptSync(password, salt, 64, { N: iterations }).toString("hex");
 
-export const attachDoubleSubmit = async (res: express.Response) => {
-  res.cookie("doubleSubmit", await generateToken(), { maxAge: 1000 * 3600, sameSite: "strict" });
+export const attachCsrfToken = async (res: express.Response) => {
+  res.cookie("xCsrfToken", await generateToken(), { maxAge: 1000 * 3600, sameSite: "strict" });
 };

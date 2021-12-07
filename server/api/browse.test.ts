@@ -36,9 +36,10 @@ it("fetches contents", async (done) => {
 
   expect(response.status).toBe(200);
   expect(response.body).toStrictEqual({
+    isRoot: false,
     path: "design-document",
     name: "design-document",
-    items: [createDirItem("assets"), createFileItem("design-document.md", 8834, "8.63 KB")],
+    items: [createDirItem("assets"), createFileItem("design-document.md", 8834, "9 KB")],
   });
 
   done();

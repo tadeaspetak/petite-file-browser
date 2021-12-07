@@ -6,7 +6,7 @@ import path from "path";
 
 import { api } from "./api";
 import { Logger } from "./logger";
-import { attachDoubleSubmit } from "./security";
+import { attachCsrfToken } from "./security";
 
 const app = express();
 // avoid having to manually tweak CSP, HSTS, X-Powered-By, MIME-sniffing, etc.
@@ -27,7 +27,7 @@ app.get("/healthz", (_, res) => {
 
 app.use("/api", api);
 app.use(async (req, res) => {
-  if (!req.cookies["doubleSubmit"]) await attachDoubleSubmit(res);
+  if (!req.cookies["xCsrfToken"]) await attachCsrfToken(res);
   res.sendFile(path.join(client, "index.html"));
 });
 

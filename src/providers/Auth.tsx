@@ -4,7 +4,7 @@ import { ApiSessionReq, ApiSessionRes } from "../../common/types";
 import { getCookie } from "../utils";
 
 export enum AuthResult {
-  INVALID_DOUBLE_SUBMIT,
+  INVALID_CSRF,
   INVALID_CREDENTIALS,
   SUCCESS,
   UNKNOWN_ERROR,
@@ -25,7 +25,7 @@ let AuthContext = React.createContext<AuthContextType>(null!);
 const getPersistedUser = () => localStorage.getItem("user");
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<User | undefined>();
-  const retriedDoubleSubmit = useRef(false);
+  const retriedCsrfToken = useRef(false);
 
   useEffect(() => {
     const user = getPersistedUser();
@@ -38,34 +38,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
     try {
-      const params: ApiSessionReq = {
-        email,
-        password,
-        doubleSubmit: getCookie("doubleSubmit") ?? "",
-      };
+      const params: ApiSessionReq = { email, password };
 
       const response = await fetch("/api/auth/session", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: {
+          "content-type": "application/json",
+          "x-csrf-token": getCookie("xCsrfToken") ?? "",
+        },
         body: JSON.stringify(params),
       });
 
       switch (response.status) {
         case 400:
-          // implies the double submit cookie must have expired, let's try once more
-          if (!retriedDoubleSubmit.current) {
-            console.log("retrying double submit..."); // eslint-disable-line no-console
-            retriedDoubleSubmit.current = true;
+          // implies the CSRF cookie must have expired, let's try once more
+          if (!retriedCsrfToken.current) {
+            console.log("retrying CSRF..."); // eslint-disable-line no-console
+            retriedCsrfToken.current = true;
             return signIn(email, password);
           }
-          console.error("Double submit unsuccessful on a retry, should be impossible?", response); // eslint-disable-line no-console
+          console.error("CSRF token unsuccessful on a retry, should be impossible?", response); // eslint-disable-line no-console
           return AuthResult.UNKNOWN_ERROR;
         case 401:
           return AuthResult.INVALID_CREDENTIALS;
         case 200:
           const json: ApiSessionRes = await response.json();
 
-          retriedDoubleSubmit.current = false;
+          retriedCsrfToken.current = false;
           localStorage.setItem("user", JSON.stringify(json));
           setUser(json);
 

@@ -16,7 +16,6 @@ export type BrowserItem = BrowserFile | BrowserDirectory;
 export interface ApiSessionReq {
   email: string;
   password: string;
-  doubleSubmit: string;
 }
 
 export interface ApiSessionRes {

@@ -17,14 +17,14 @@ export const signIn = async (
   request: supertest.SuperTest<supertest.Test> | supertest.SuperAgentTest,
   password = fakeUserPassword,
 ) => {
-  const response = await request.get("/index.html");
+  const response = await request.get("/browse");
 
-  const doubleSubmit = parseCookies(response).find((c) => c.name === "doubleSubmit")?.value;
-  expect(doubleSubmit).toBeDefined();
+  const xCsrfToken = parseCookies(response).find((c) => c.name === "xCsrfToken")?.value;
+  expect(xCsrfToken).toBeDefined();
 
   return request
     .post("/api/auth/session")
-    .send({ email: "john@petite.com", password, doubleSubmit })
-    .set("Cookie", `doubleSubmit=${doubleSubmit}`)
-    .set("Content-Type", "application/json");
+    .send({ email: "john@petite.com", password })
+    .set({ "Content-Type": "application/json", "x-csrf-token": xCsrfToken })
+    .set("Cookie", `xCsrfToken=${xCsrfToken}`);
 };
