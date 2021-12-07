@@ -8,7 +8,7 @@ export const typeFilterValues = ["file", "all", "dir"] as const; // preserve the
 export type TypeFilterValue = typeof typeFilterValues[number];
 
 type FilterContextType = {
-  nameFilter?: string;
+  nameFilter: string;
   setNameFilter: (search: string) => void;
 
   typeFilter?: TypeFilterValue;
@@ -25,7 +25,7 @@ export const FilterContext = React.createContext<FilterContextType>(null!);
 export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const [params, setParams] = useSearchParams();
 
-  const nameFilter = useMemo(() => params.get("name") ?? undefined, [params]);
+  const nameFilter = useMemo(() => params.get("name") ?? "", [params]);
   const setNameFilter = useCallback(
     (search: string) => setParams(setOrDeleteParam(params, "name", search)),
     [setParams, params],
