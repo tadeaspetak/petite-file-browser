@@ -36,7 +36,12 @@ browseApi.get("/", (req, res) => {
       items.push(createItem(child, fs.statSync(path.join(current, child))));
     }
 
-    const response: ApiBrowseRes = { path: normalized, name: path.basename(current), items };
+    const response: ApiBrowseRes = {
+      path: normalized,
+      name: path.basename(current),
+      items,
+      isRoot: normalized === "",
+    };
     res.send(response);
   } catch (e) {
     Logger.error("Cannot read path.", { user: req.user, basePath, rawPath: raw, current });

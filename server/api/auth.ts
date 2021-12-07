@@ -1,17 +1,18 @@
 import crypto from "crypto";
 import express from "express";
 
-import { ApiSessionReq } from "../../common/types";
+import { ApiSessionReq, ApiSessionRes } from "../../common/types";
 import { Sessions, Users } from "../models";
-import { generateToken } from "../security";
+import { attachCsrfToken, generateToken } from "../security";
 
 const authApi = express.Router();
 
 authApi.post("/session", async (req, res) => {
   const params: ApiSessionReq = req.body;
 
-  if (!params.doubleSubmit || params.doubleSubmit !== req.cookies["doubleSubmit"]) {
-    return res.status(401).json({ message: "Invalid double submit." });
+  if (!req.headers["x-csrf-token"] || req.headers["x-csrf-token"] !== req.cookies["xCsrfToken"]) {
+    await attachCsrfToken(res); // reattach since the only reasonable explanation is that the CSRF cookie has expired
+    return res.status(400).json({ message: "Invalid CSRF token." });
   }
 
   const user = Users.findByEmail(params.email);
@@ -21,20 +22,18 @@ authApi.post("/session", async (req, res) => {
   }
 
   const sessionId = await generateToken();
-  const csrfId = await generateToken();
 
   res.cookie("sessionId", sessionId, { httpOnly: true, maxAge: 1000 * 3600 * 24, sameSite: "lax" });
-  res.cookie("csrfId", csrfId, { httpOnly: false, maxAge: 1000 * 3600 * 24, sameSite: "strict" });
-  Sessions.add({ csrfId, sessionId, userEmail: user.email });
+  Sessions.add({ sessionId, userEmail: user.email });
 
-  res.status(200).json({ message: "Signed in." });
+  const response: ApiSessionRes = { email: user.email, name: user.name };
+  res.status(200).json(response);
 });
 
 authApi.delete("/session", async (req, res) => {
   if (req.cookies["sessionId"]) Sessions.remove(req.cookies["sessionId"]);
 
   res.clearCookie("sessionId");
-  res.clearCookie("csrfId");
 
   res.status(200).json({ message: "Signed out." });
 });

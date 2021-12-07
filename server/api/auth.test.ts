@@ -12,37 +12,37 @@ beforeAll(async (done) => {
   done();
 });
 
-it("receives a sign in token", async (done) => {
-  const response = await unauthed.get("/index.html");
+it("receives an csrf token", async (done) => {
+  const response = await unauthed.get("/browse");
 
-  const doubleSubmit = parseCookies(response).find((c) => c.name === "doubleSubmit");
-  expect(doubleSubmit?.value.length).toBe(64);
-  expect(doubleSubmit?.sameSite?.toLowerCase()).toBe("strict");
+  const xCsrfToken = parseCookies(response).find((c) => c.name === "xCsrfToken");
+  expect(xCsrfToken?.value.length).toBe(64);
+  expect(xCsrfToken?.sameSite?.toLowerCase()).toBe("strict");
 
   done();
 });
 
-it("fails to sign in without a double submit cookie", async (done) => {
+it("fails to sign in without a CSRF token", async (done) => {
   const response = await unauthed
     .post("/api/auth/session")
     .send({ email: "john@petite.com", password: fakeUserPassword })
     .set("Content-Type", "application/json");
 
-  expect(response.status).toBe(401);
-  expect(response.body.message).toBe("Invalid double submit.");
+  expect(response.status).toBe(400);
+  expect(response.body.message).toBe("Invalid CSRF token.");
 
   done();
 });
 
-it("fails to sign in with an invalid double submit cookie", async (done) => {
+it("fails to sign in with an invalid CSRF token", async (done) => {
   const response = await unauthed
     .post("/api/auth/session")
-    .send({ email: "john@petite.com", password: fakeUserPassword, doubleSubmit: "something" })
-    .set("Content-Type", "application/json")
-    .set("Cookie", [`doubleSubmit=somethingelse`]);
+    .send({ email: "john@petite.com", password: fakeUserPassword })
+    .set({ "Content-Type": "application/json", "x-csrf-token": "something" })
+    .set("Cookie", [`xCsrfToken=somethingelse`]);
 
-  expect(response.status).toBe(401);
-  expect(response.body.message).toBe("Invalid double submit.");
+  expect(response.status).toBe(400);
+  expect(response.body.message).toBe("Invalid CSRF token.");
 
   done();
 });
@@ -67,20 +67,14 @@ it("successfully signs in", async (done) => {
   expect(sessionId?.maxAge).toBe(86400);
   expect(sessionId?.httpOnly).toBe(true);
   expect(sessionId?.sameSite?.toLowerCase()).toBe("lax");
-  const csrfId = cookies.find((c) => c.name === "csrfId");
-  expect(csrfId?.value.length).toBe(64);
-  expect(csrfId?.maxAge).toBe(86400);
-  expect(csrfId?.httpOnly).toBe(undefined);
-  expect(csrfId?.sameSite?.toLowerCase()).toBe("strict");
 
   done();
 });
 
 it("signs out", async (done) => {
   const localAgent = supertest.agent(app);
-
   const stillAuthed = await signIn(localAgent);
-  expect(parseCookies(stillAuthed).length).toBe(2);
+  expect(parseCookies(stillAuthed).find((c) => c.name === "sessionId")).toBeDefined();
 
   const nowUnauthed = await localAgent
     .delete("/api/auth/session")

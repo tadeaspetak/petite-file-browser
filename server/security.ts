@@ -1,5 +1,5 @@
 import crypto from "crypto";
-
+import express from "express";
 export const generateToken = async (): Promise<string> =>
   new Promise((resolve, reject) => {
     crypto.randomBytes(32, (err, buffer) => (err ? reject(err) : resolve(buffer.toString("hex"))));
@@ -15,3 +15,7 @@ export const hashPassword = async (password: string) => {
 
 export const getPasswordHash = (password: string, salt: string, iterations: number): string =>
   crypto.scryptSync(password, salt, 64, { N: iterations }).toString("hex");
+
+export const attachCsrfToken = async (res: express.Response) => {
+  res.cookie("xCsrfToken", await generateToken(), { maxAge: 1000 * 3600, sameSite: "strict" });
+};

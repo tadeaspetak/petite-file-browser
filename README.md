@@ -27,8 +27,7 @@ yarn
 yarn dev
 
 # or something closer to production
-yarn build
-yarn start:prod
+yarn start
 ```
 
 To see the tests pass (🤞), go with the standard:

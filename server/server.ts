@@ -1,32 +1,35 @@
 import cookieParser from "cookie-parser";
 import express from "express";
 import fs from "fs";
+import helmet from "helmet";
 import path from "path";
 
 import { api } from "./api";
 import { Logger } from "./logger";
-import { generateToken } from "./security";
+import { attachCsrfToken } from "./security";
 
 const app = express();
-app.disable("x-powered-by"); // hide info about what's powering the backend
+// avoid having to manually tweak CSP, HSTS, X-Powered-By, MIME-sniffing, etc.
+app.use(
+  helmet({
+    contentSecurityPolicy: { directives: { defaultSrc: "'self'" } },
+  }),
+);
 app.use(express.json());
 app.use(cookieParser());
 
 const client = path.resolve(__dirname, "../build");
-if (fs.existsSync(client))
-  app.use(async (req, res, next) => {
-    if (req.url === "/index.html" && !req.cookies["doubleSubmit"]) {
-      const doubleSubmit = await generateToken();
-      res.cookie("doubleSubmit", doubleSubmit, { maxAge: 1000 * 3600, sameSite: "strict" });
-    }
-    next();
-  }, express.static(client));
+if (fs.existsSync(client)) app.use(express.static(client));
 
 app.get("/healthz", (_, res) => {
   res.send({ message: "We're live 🚀" });
 });
 
 app.use("/api", api);
+app.use(async (req, res) => {
+  if (!req.cookies["xCsrfToken"]) await attachCsrfToken(res);
+  res.sendFile(path.join(client, "index.html"));
+});
 
 // keep this as the last middleware to prevent leaking error specifics
 app.use(((err, req, res, next) => {

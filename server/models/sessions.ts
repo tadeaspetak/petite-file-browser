@@ -1,7 +1,6 @@
 interface Session {
   userEmail: string;
   sessionId: string;
-  csrfId: string;
 }
 
 export class Sessions {
