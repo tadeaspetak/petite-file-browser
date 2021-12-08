@@ -1,6 +1,6 @@
 import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useCallback } from "react";
+import React from "react";
 
 import { BrowserItem } from "../../../common/types";
 import { classNames } from "../../../utils";
@@ -10,13 +10,11 @@ export const Row: React.FC<{
   item: BrowserItem;
   showPreview: (value: string) => void;
 }> = ({ browseRelative, item, showPreview }) => {
-  const onClick = useCallback(
-    () => (item.type === "dir" ? browseRelative(item.name) : showPreview(item.name)),
-    [browseRelative, item.name, item.type, showPreview],
-  );
-
   return (
-    <tr className="cursor-pointer hover:bg-gray-700 group" onClick={onClick}>
+    <tr
+      className="cursor-pointer hover:bg-gray-700 group"
+      onClick={() => (item.type === "dir" ? browseRelative(item.name) : showPreview(item.name))}
+    >
       <td className="p-3">
         <div className="flex items-center">
           <FontAwesomeIcon

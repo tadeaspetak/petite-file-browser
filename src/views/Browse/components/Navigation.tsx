@@ -11,14 +11,6 @@ export const Navigation: React.FC<{ browseAbsolute: (url: string) => void; path:
   browseAbsolute,
   path,
 }) => {
-  // const { toast } = useToasts();
-
-  // const bookmark = useCallback(() => {
-  //   toast(`Press ${isMac() ? "Cmd" : "Ctrl"} + D to bookmark this page.`, "info", {
-  //     id: "bookmark-me",
-  //   });
-  // }, [toast]);
-
   const parts: PathPart[] = useMemo(() => {
     const parts = path
       .split("/")
@@ -54,7 +46,6 @@ export const Navigation: React.FC<{ browseAbsolute: (url: string) => void; path:
           </span>
         ))}
       </div>
-      {/* <Button icon={faBookmark} onClick={bookmark} size="sm" className="ml-auto" /> */}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { faBullseye, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "../components";
@@ -12,11 +12,11 @@ export const Header: React.FC = () => {
 
   const [isSigningOut, setIsSigningOut] = useState(false);
 
-  const handleSignOut = useCallback(async () => {
+  const handleSignOut = async () => {
     setIsSigningOut(true);
     await signOut();
     setIsSigningOut(false);
-  }, [signOut]);
+  };
 
   return (
     <header className="flex justify-center w-full h-12 px-2 bg-gray-900 shadow-lg">

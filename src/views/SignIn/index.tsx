@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import { Button } from "../../components";
@@ -15,25 +15,22 @@ export const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSignIn = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-      const response = await signIn(email, password);
-      setIsSubmitting(false);
-      switch (response.status) {
-        case "unauthorized":
-          toast("Invalid credentials.", "error", { id: "sign-in" });
-          break;
-        case "ok":
-          untoast("sign-in-error");
-          navigate(location.state?.from?.pathname || "/browse", { replace: true });
-          break;
-      }
-    },
-    [email, password, location.state, toast, untoast, navigate, signIn],
-  );
+    const response = await signIn(email, password);
+    setIsSubmitting(false);
+    switch (response.status) {
+      case "unauthorized":
+        toast("Invalid credentials.", "error", { id: "sign-in" });
+        break;
+      case "ok":
+        untoast("sign-in-error");
+        navigate(location.state?.from?.pathname || "/browse", { replace: true });
+        break;
+    }
+  };
 
   // note: perform the check only on mounting (and **not** on subsequent changes) to avoid race conditions with the router
   useEffect(() => {

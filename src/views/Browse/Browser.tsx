@@ -44,7 +44,7 @@ export const Browser: React.FC<{
 
   const items = useMemo(
     () => applySorting(applyFilters([...(contents?.items ?? [])])),
-    [applyFilters, applySorting, contents],
+    [applyFilters, applySorting, contents?.items],
   );
 
   return (

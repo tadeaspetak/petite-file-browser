@@ -4,7 +4,7 @@ import {
   faLongArrowAltUp,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 
 import { SortingColumnName, useSort } from "../providers";
 
@@ -24,12 +24,13 @@ export const HeaderCell: React.FC<{
     return [faArrowsAltV, "text-gray-600"];
   }, [name, sorting]);
 
-  const sort = useCallback(() => {
-    if (sortable) sortColumn(name);
-  }, [name, sortable, sortColumn]);
-
   return (
-    <th className={`p-3 select-none ${className} ${sortable && "cursor-pointer"}`} onClick={sort}>
+    <th
+      className={`p-3 select-none ${className} ${sortable && "cursor-pointer"}`}
+      onClick={() => {
+        if (sortable) sortColumn(name);
+      }}
+    >
       <div className="flex items-center">
         {children}
         {sortable && (

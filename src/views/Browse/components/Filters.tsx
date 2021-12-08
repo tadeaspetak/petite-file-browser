@@ -1,6 +1,6 @@
 import { faFile, faFolder, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 
 import { BrowserFile, BrowserItem } from "../../../common/types";
 import { getHumanSize } from "../../../common/utils";
@@ -11,6 +11,8 @@ import { TypeFilterValue, typeFilterValues, useFilter } from "../providers";
 export const Filters: React.FC<{ items: BrowserItem[] }> = ({ items }) => {
   const { nameFilter, setNameFilter, sizeFilter, setSizeFilter, typeFilter, setTypeFilter } =
     useFilter();
+
+  const formatSize = useCallback((v: number) => getHumanSize(v), []);
 
   const sizeMinMax = useMemo(() => {
     const sizes = (items.filter((i) => i.type === "file") as BrowserFile[]).map((i) => i.sizeBytes);
@@ -27,7 +29,7 @@ export const Filters: React.FC<{ items: BrowserItem[] }> = ({ items }) => {
             setValues={(a, b) => setSizeFilter({ min: a, max: b })}
             min={sizeMinMax.min}
             max={sizeMinMax.max}
-            format={(v) => getHumanSize(v)}
+            format={formatSize}
           />
         </div>
       )}

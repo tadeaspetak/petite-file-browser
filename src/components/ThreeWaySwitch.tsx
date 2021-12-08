@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 
 type Position = "left" | "center" | "right";
 
@@ -8,10 +8,7 @@ export const ThreeWaySwitch: React.FC<{
   value: string;
   setValue: (value: string) => void;
 }> = ({ labels, values, value = "center", setValue }) => {
-  const onChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value),
-    [setValue],
-  );
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value);
 
   const position: Position = useMemo(
     () => (value === values[0] ? "left" : value === values[1] ? "center" : "right"),
