@@ -74,3 +74,15 @@ it("fails to fetch contents of a non-existing path", async (done) => {
 
   done();
 });
+
+it("fails to fetch contents of a file", async (done) => {
+  const file = "design-document/design-document.md";
+  const response = await authed
+    .get(`/api/browse?path=/${file}`)
+    .set("Content-Type", "application/json");
+
+  expect(response.status).toBe(404);
+  expect(response.body.message).toBe(`Directory '${path.normalize(file)}' not found.`);
+
+  done();
+});

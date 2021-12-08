@@ -30,7 +30,7 @@ browseApi.get("/", (req, res) => {
     return res.status(400).json({ message: "Invalid path." });
   }
 
-  if (!fs.existsSync(current)) {
+  if (!fs.existsSync(current) || !fs.statSync(current).isDirectory()) {
     return res.status(404).json({ message: `Directory '${normalized}' not found.` });
   }
 
