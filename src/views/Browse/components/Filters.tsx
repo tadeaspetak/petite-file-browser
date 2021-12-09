@@ -1,6 +1,6 @@
 import { faFile, faFolder, faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useCallback, useMemo } from "react";
+import React, { useMemo } from "react";
 
 import { BrowserFile, BrowserItem } from "../../../common/types";
 import { getHumanSize } from "../../../common/utils";
@@ -12,8 +12,7 @@ export const Filters: React.FC<{ items: BrowserItem[] }> = ({ items }) => {
   const { nameFilter, setNameFilter, sizeFilter, setSizeFilter, typeFilter, setTypeFilter } =
     useFilter();
 
-  const formatSize = useCallback((v: number) => getHumanSize(v), []);
-
+  // note: keep `useMemo` to avoid re-iterating over the array (which might get expensive)
   const sizeMinMax = useMemo(() => {
     const sizes = (items.filter((i) => i.type === "file") as BrowserFile[]).map((i) => i.sizeBytes);
     if (sizes.length < 2) return;
@@ -22,14 +21,14 @@ export const Filters: React.FC<{ items: BrowserItem[] }> = ({ items }) => {
 
   return (
     <div className="flex flex-col items-center justify-center w-full p-4 bg-gray-900 border-gray-900 rounded shadow-2xl sm:flex-row">
-      {sizeMinMax && (
+      {sizeMinMax && sizeFilter && (
         <div className="mb-2 sm:mb-0">
           <MultiRangeSlider
-            values={{ a: sizeFilter?.min, b: sizeFilter?.max }}
+            values={{ a: sizeFilter.min, b: sizeFilter.max }}
             setValues={(a, b) => setSizeFilter({ min: a, max: b })}
             min={sizeMinMax.min}
             max={sizeMinMax.max}
-            format={formatSize}
+            format={(v: number) => getHumanSize(v)}
           />
         </div>
       )}

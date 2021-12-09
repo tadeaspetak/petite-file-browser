@@ -18,6 +18,7 @@ const Wrapper: React.FC<{
     return () => void document.body.removeChild(current);
   }, []);
 
+  // note: keep `useCallback`, used in the `useEffect` below
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
       if (isOpen && closeOnEsc && e.key === "Escape" && onClose) onClose();

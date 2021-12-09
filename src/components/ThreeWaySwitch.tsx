@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 
 type Position = "left" | "center" | "right";
 
@@ -10,10 +10,8 @@ export const ThreeWaySwitch: React.FC<{
 }> = ({ labels, values, value = "center", setValue }) => {
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => setValue(e.target.value);
 
-  const position: Position = useMemo(
-    () => (value === values[0] ? "left" : value === values[1] ? "center" : "right"),
-    [value, values],
-  );
+  const position: Position =
+    value === values[0] ? "left" : value === values[1] ? "center" : "right";
 
   return (
     <div className="flex flex-col items-center three-way-switch">

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { BrowserFile, BrowserItem } from "../../../common/types";
@@ -20,11 +20,11 @@ export const Preview: React.FC<{ items: BrowserItem[]; preview: string }> = ({
 }) => {
   const [params, setParams] = useSearchParams();
 
-  const item = useMemo(
-    () => items.find((i) => i.name === preview && i.type === "file") as BrowserFile | undefined,
-    [items, preview],
-  );
+  const item = items.find((i) => i.name === preview && i.type === "file") as
+    | BrowserFile
+    | undefined;
 
+  // note: keep `useCallback`, used in `useEffect` below
   const onClose = useCallback(
     () => void setParams(setOrDeleteParam(params, "preview", undefined)),
     [params, setParams],

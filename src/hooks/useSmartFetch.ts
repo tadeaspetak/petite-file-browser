@@ -1,6 +1,5 @@
 import { useCallback, useRef } from "react";
 
-import { useAuth, useToasts } from "../providers";
 import { getCookie } from "../utils";
 
 interface ErrorNetwork {
@@ -22,28 +21,13 @@ interface Success<T> {
 export type SmartFetchResult<T> = ErrorGeneral | ErrorNetwork | Success<T>;
 
 export const useSmartFetch = () => {
-  return useSmartFetchUnauthed(useAuth().signOut);
-};
-
-export const useSmartFetchUnauthed = (signOut?: () => Promise<SmartFetchResult<void>>) => {
-  const { toast } = useToasts();
   const retriedCsrfToken = useRef(false);
 
   const request = useRef<Promise<any>>();
 
-  const notifyUnknown = useCallback(() => {
-    toast("There has been an unexpected error. Please, try again in a short while.", "error");
-  }, [toast]);
-
+  // keep `useCallback`, used in other hooks
   const smartFetch = useCallback(
-    async <T>(
-      input: RequestInfo,
-      init?: RequestInit,
-      {
-        handleNetwork = true,
-        handleUnknown = true,
-      }: { handleNetwork?: boolean; handleUnknown?: boolean } = {},
-    ): Promise<SmartFetchResult<T>> => {
+    async <T>(input: RequestInfo, init?: RequestInit): Promise<SmartFetchResult<T>> => {
       try {
         const fetching = fetch(input, {
           headers: {
@@ -56,7 +40,12 @@ export const useSmartFetchUnauthed = (signOut?: () => Promise<SmartFetchResult<v
         const response = await fetching;
 
         if (request.current !== fetching) {
-          console.log("throwing away a stale request"); // eslint-disable-line no-console
+          // eslint-disable-next-line no-console
+          console.log("throwing away response to a stale request", {
+            fetching,
+            req: request.current,
+            res: response,
+          });
           return { status: "stale", response };
         }
 
@@ -64,7 +53,7 @@ export const useSmartFetchUnauthed = (signOut?: () => Promise<SmartFetchResult<v
           case 200:
             return { status: "ok", response, parsed: (await response.json()) as T };
           case 400:
-            // often, this implies the CSRF cookie must has expired, let's try once more
+            // often, this implies the CSRF cookie must have expired, let's try once more
             if (!retriedCsrfToken.current) {
               console.log("retrying CSRF..."); // eslint-disable-line no-console
               retriedCsrfToken.current = true;
@@ -75,28 +64,17 @@ export const useSmartFetchUnauthed = (signOut?: () => Promise<SmartFetchResult<v
           case 401:
             return { status: "unauthorized", response };
           case 403:
-            if (signOut) {
-              toast("You've been signed out, please sign in again.", "error", { id: "sign-in" });
-              await signOut();
-            }
             return { status: "forbidden", response };
           default:
-            console.error("Unexpected status.", response); // eslint-disable-line no-console
-            if (handleUnknown) notifyUnknown();
+            console.log("Unexpected status.", response); // eslint-disable-line no-console
             return { status: "unknown", response };
         }
       } catch (e) {
-        if (handleNetwork) {
-          toast(
-            "We couldn't connect to the server. Please, check your connection, or try again in a short while.",
-            "error",
-          );
-        }
         return { status: "network", error: e };
       }
     },
-    [signOut, toast, notifyUnknown],
+    [],
   );
 
-  return { smartFetch, notifyUnknown };
+  return { smartFetch };
 };

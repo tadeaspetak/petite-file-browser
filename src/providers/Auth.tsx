@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 
 import { ApiSessionReq, ApiSessionRes } from "../../src/common/types";
-import { SmartFetchResult, useSmartFetchUnauthed } from "../hooks";
+import { SmartFetchResult, useSmartFetch } from "../hooks";
 
 type User = ApiSessionRes;
 
@@ -19,37 +19,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<User | undefined>();
   const retriedCsrfToken = useRef(false);
 
-  const { smartFetch } = useSmartFetchUnauthed();
+  const { smartFetch } = useSmartFetch();
 
   useEffect(() => {
     const user = getPersistedUser();
     if (user) setUser(JSON.parse(user));
   }, []);
 
-  const isAuthenticated = useMemo(() => {
-    return user || getPersistedUser() ? true : false; // components mount faster than the hook above evaluates
-  }, [user]);
+  // components mount faster than the hook above evaluates, init immediately
+  const isAuthenticated = user || getPersistedUser() ? true : false;
 
-  const signIn = useCallback(
-    async (email: string, password: string): Promise<SmartFetchResult<User>> => {
-      const params: ApiSessionReq = { email, password };
+  const signIn = async (email: string, password: string): Promise<SmartFetchResult<User>> => {
+    const params: ApiSessionReq = { email, password };
 
-      const result = await smartFetch<ApiSessionRes>("/api/auth/session", {
-        method: "POST",
-        body: JSON.stringify(params),
-      });
+    const result = await smartFetch<ApiSessionRes>("/api/auth/session", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
 
-      if (result.status === "ok") {
-        retriedCsrfToken.current = false;
-        localStorage.setItem("user", JSON.stringify(result.parsed));
-        setUser(result.parsed);
-      }
+    if (result.status === "ok") {
+      retriedCsrfToken.current = false;
+      localStorage.setItem("user", JSON.stringify(result.parsed));
+      setUser(result.parsed);
+    }
 
-      return result;
-    },
-    [smartFetch],
-  );
+    return result;
+  };
 
+  // note: keep `useCallback`, used in other hooks (e.g. in `views/Browse/index`)
   const signOut = useCallback(async () => {
     const response = await smartFetch<void>("/api/auth/session", {
       method: "DELETE",

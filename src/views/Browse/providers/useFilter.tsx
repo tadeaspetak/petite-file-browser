@@ -25,12 +25,11 @@ export const FilterContext = React.createContext<FilterContextType>(null!);
 export const FilterProvider = ({ children }: { children: ReactNode }) => {
   const [params, setParams] = useSearchParams();
 
+  // note: keep `useMemo` to update only when URL params change
   const nameFilter = useMemo(() => params.get("name") ?? "", [params]);
-  const setNameFilter = useCallback(
-    (search: string) => setParams(setOrDeleteParam(params, "name", search)),
-    [setParams, params],
-  );
+  const setNameFilter = (search: string) => setParams(setOrDeleteParam(params, "name", search));
 
+  // note: keep `useMemo` to update only when URL params change
   const sizeFilter = useMemo(() => {
     const sizeParam = params.get("size");
     if (!sizeParam) return;
@@ -43,14 +42,10 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
 
     return { min: sizes[0], max: sizes[1] };
   }, [params]);
-  const setSizeFilter = useCallback(
-    (values?: { min: number; max: number }) =>
-      setParams(
-        setOrDeleteParam(params, "size", values ? `${values.min}-${values.max}` : undefined),
-      ),
-    [setParams, params],
-  );
+  const setSizeFilter = (values?: { min: number; max: number }) =>
+    setParams(setOrDeleteParam(params, "size", values ? `${values.min}-${values.max}` : undefined));
 
+  // note: keep `useMemo` to update only when URL params change
   const typeFilter = useMemo(() => {
     const typeParam = params.get("type") as TypeFilterValue | undefined;
     if (!typeParam) return;
@@ -62,13 +57,11 @@ export const FilterProvider = ({ children }: { children: ReactNode }) => {
 
     return typeParam === "all" ? undefined : typeParam;
   }, [params]);
-  const setTypeFilter = useCallback(
-    (value?: TypeFilterValue) => {
-      setParams(setOrDeleteParam(params, "type", value && value !== "all" ? value : undefined));
-    },
-    [setParams, params],
-  );
+  const setTypeFilter = (value?: TypeFilterValue) => {
+    setParams(setOrDeleteParam(params, "type", value && value !== "all" ? value : undefined));
+  };
 
+  // note: keep `useCallback` so this can be used as a dependency tO auto-apply filters when they change
   const applyFilters = useCallback(
     (items: BrowserItem[]) => {
       let next = items;

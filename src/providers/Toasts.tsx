@@ -34,8 +34,9 @@ const rm = (toasts: Toast[], id: string) => {
 export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const untoast = useCallback((id: string) => setToasts((toasts) => rm(toasts, id)), []);
+  const untoast = (id: string) => setToasts((toasts) => rm(toasts, id));
 
+  // note: keep `useCallback`, used in other hooks
   const toast = useCallback(
     (body: string, type: ToastType, { id, hideIn = 5000 }: ToastOptions = {}) => {
       setToasts((toasts) => {

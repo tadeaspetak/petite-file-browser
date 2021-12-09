@@ -1,40 +1,48 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 
 import { ApiBrowseRes } from "../../common/types";
 import { useSmartFetch } from "../../hooks";
-import { useToasts } from "../../providers";
+import { useAuth, useToasts } from "../../providers";
 import { Browser } from "./Browser";
 import { FilterProvider, SortProvider } from "./providers";
 
 export const Browse: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { smartFetch, notifyUnknown } = useSmartFetch();
+  const { smartFetch } = useSmartFetch();
   const { toast } = useToasts();
+  const { signOut } = useAuth();
 
-  // TODO: is there a better way?
-  const path = useMemo(() => location.pathname.replace(/^\/browse/, ""), [location.pathname]);
+  const path = location.pathname.replace(/^\/browse/, "");
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [contents, setContents] = useState<ApiBrowseRes | undefined>();
 
   useEffect(() => {
     (async () => {
       setIsLoading(true);
 
-      const result = await smartFetch<ApiBrowseRes>(
-        `/api/browse?path=${path}`,
-        { method: "GET" },
-        { handleUnknown: false },
-      );
-      if (result.status !== "stale") setIsLoading(false);
+      const result = await smartFetch<ApiBrowseRes>(`/api/browse?path=${path}`, {
+        method: "GET",
+      });
 
       switch (result.status) {
         case "ok":
           setContents(result.parsed);
           break;
-        case "unknown":
+        case "forbidden": {
+          toast("You've been signed out, please sign in again.", "error", { id: "sign-in" });
+          await signOut();
+          break;
+        }
+        case "network":
+          toast(
+            "We couldn't connect to the server. Please, check your connection, or try again in a short while.",
+            "error",
+          );
+          break;
+        default:
           if (result.response.status === 404) {
             toast(
               `We couldn't find the place you were trying to browse ('${path}'). We've taken you back to the safety of the harbour ⚓`,
@@ -43,16 +51,21 @@ export const Browse: React.FC = () => {
             );
             navigate("/browse");
           } else {
-            notifyUnknown();
+            toast(
+              "There has been an unexpected error. Please, try again in a short while.",
+              "error",
+            );
           }
       }
+
+      if (result.status !== "stale") setIsLoading(false); // note: keep at the end to make sure we have the contents before rendering them
     })();
-  }, [smartFetch, path, toast, notifyUnknown, navigate]);
+  }, [navigate, path, signOut, smartFetch, toast]);
 
   return (
     <FilterProvider>
       <SortProvider>
-        <Browser contents={contents} loading={isLoading} path={path} />
+        <Browser contents={contents} loading={isLoading} path={path} setLoading={setIsLoading} />
       </SortProvider>
     </FilterProvider>
   );

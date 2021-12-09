@@ -1,6 +1,5 @@
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMemo } from "react";
 
 import { classNames } from "../utils";
 import { Spinner } from "./Spinner";
@@ -40,8 +39,8 @@ export const Button: React.FC<ButtonProps> = ({
   size,
   type = "button",
 }) => {
-  const isDisabled = useMemo(() => disabled || loading, [disabled, loading]);
-  const isSmall = useMemo(() => size === "sm", [size]);
+  const isDisabled = disabled || loading;
+  const isSmall = size === "sm";
 
   return (
     <button

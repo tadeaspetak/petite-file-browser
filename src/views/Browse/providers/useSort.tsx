@@ -34,12 +34,12 @@ export const SortContext = React.createContext<SortContextType>(null!);
 export const SortProvider = ({ children }: { children: ReactNode }) => {
   const [params, setParams] = useSearchParams();
 
+  // note: keep `useMemo` to update only when URL params change
   const dirsFirst: boolean = useMemo(() => !!params.get("dirs"), [params]);
-  const setDirsFirstInternal = useCallback(
-    (value: boolean) => setParams(setOrDeleteParam(params, "dirs", value ? "true" : undefined)),
-    [params, setParams],
-  );
+  const setDirsFirstInternal = (value: boolean) =>
+    setParams(setOrDeleteParam(params, "dirs", value ? "true" : undefined));
 
+  // note: keep `useMemo` to update only when URL params change
   const sorting: Sorting | undefined = useMemo(() => {
     const sortParam = params.get("sort");
     const hyphenIndex = sortParam?.lastIndexOf("-") ?? -1;
@@ -60,41 +60,33 @@ export const SortProvider = ({ children }: { children: ReactNode }) => {
     return column && direction ? { column, direction } : undefined;
   }, [params]);
 
-  const setSorting = useCallback(
-    (sorting: Sorting | undefined) => {
-      if (sorting?.column === "type") setDirsFirstInternal(false);
-      setParams(
-        setOrDeleteParam(
-          params,
-          "sort",
-          sorting ? `${sorting.column}-${sorting.direction}` : undefined,
-        ),
-      );
-    },
-    [params, setParams, setDirsFirstInternal],
-  );
+  const setSorting = (sorting: Sorting | undefined) => {
+    if (sorting?.column === "type") setDirsFirstInternal(false);
+    setParams(
+      setOrDeleteParam(
+        params,
+        "sort",
+        sorting ? `${sorting.column}-${sorting.direction}` : undefined,
+      ),
+    );
+  };
 
-  const sortColumn = useCallback(
-    (column: SortingColumnName) => {
-      const next =
-        !sorting || sorting.column !== column
-          ? { column, direction: "asc" }
-          : sorting.direction === "asc"
-          ? { column, direction: "desc" }
-          : undefined;
-      setSorting(next);
-    },
-    [sorting, setSorting],
-  );
+  const sortColumn = (column: SortingColumnName) => {
+    const next =
+      !sorting || sorting.column !== column
+        ? { column, direction: "asc" }
+        : sorting.direction === "asc"
+        ? { column, direction: "desc" }
+        : undefined;
+    setSorting(next);
+  };
 
-  const setDirsFirst = useCallback(
-    (value: boolean) => {
-      if (sorting?.column === "type") setSorting(undefined);
-      setDirsFirstInternal(value);
-    },
-    [setDirsFirstInternal, sorting, setSorting],
-  );
+  const setDirsFirst = (value: boolean) => {
+    if (sorting?.column === "type") setSorting(undefined);
+    setDirsFirstInternal(value);
+  };
 
+  // note: keep `useCallback` so this can be used as a dependency to auto-apply sorting when it changes
   const applySorting = useCallback(
     (items: BrowserItem[]) =>
       items.sort((a, b) => {

@@ -1,51 +1,40 @@
-import { useCallback, useMemo } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import React from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { ApiBrowseRes } from "../../../src/common/types";
+import { ApiBrowseRes, BrowserItem } from "../../../src/common/types";
 import { Spinner } from "../../components";
-import { joinUrl, setOrDeleteParam } from "../../utils";
+import { setOrDeleteParam } from "../../utils";
 import { Filters, HeaderCell, Navigation, Preview, Row, RowBack, Sorting } from "./components";
 import { useFilter, useSort } from "./providers";
 
-export const Browser: React.FC<{
+interface BrowserProps {
   contents: ApiBrowseRes | undefined;
   loading: boolean;
   path: string;
-}> = ({ contents, loading, path }) => {
-  const location = useLocation();
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+type FilterOrSort = (items: BrowserItem[]) => BrowserItem[];
+
+const MemoizedBrowser: React.FC<
+  BrowserProps & { applyFilters: FilterOrSort; applySorting: FilterOrSort }
+> = React.memo(({ contents, loading, path, applyFilters, applySorting, setLoading }) => {
   const navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
 
-  const { applyFilters } = useFilter();
-  const { applySorting } = useSort();
+  const browse = (url: string) => {
+    const nextParams = new URLSearchParams();
+    setOrDeleteParam(nextParams, "sort", params.get("sort") ?? undefined);
+    setOrDeleteParam(nextParams, "dirs", params.get("dirs") ?? undefined);
 
-  const browseAbsolute = useCallback(
-    (url: string) => {
-      // preseve sorting
-      const nextParams = new URLSearchParams();
-      setOrDeleteParam(nextParams, "sort", params.get("sort") ?? undefined);
-      setOrDeleteParam(nextParams, "dirs", params.get("dirs") ?? undefined);
+    setLoading(true); // note: prevent from rerendering rows in the time between the `navigate` call below and the fetching hook in the parent kicks in
+    navigate(`${url}?${nextParams.toString()}`);
+  };
 
-      navigate(url + `?${nextParams.toString()}`);
-    },
-    [navigate, params],
-  );
+  const preview = params.get("preview");
 
-  const browseRelative = useCallback(
-    (name: string) => browseAbsolute(joinUrl("/", location.pathname, name)),
-    [location.pathname, browseAbsolute],
-  );
-
-  const preview = useMemo(() => params.get("preview"), [params]);
-  const showPreview = useCallback(
-    (value: string) => void setParams(setOrDeleteParam(params, "preview", value)),
-    [params, setParams],
-  );
-
-  const items = useMemo(
-    () => applySorting(applyFilters([...(contents?.items ?? [])])),
-    [applyFilters, applySorting, contents?.items],
-  );
+  // note: no need for `useMemo` as the whole component is memoized
+  const items = loading ? [] : applySorting(applyFilters([...(contents?.items ?? [])]));
 
   return (
     <div className="w-full mt-8">
@@ -53,7 +42,7 @@ export const Browser: React.FC<{
 
       <Filters items={contents?.items ?? []} />
       <Sorting />
-      <Navigation browseAbsolute={browseAbsolute} path={path} />
+      <Navigation browse={browse} path={path} />
 
       <div className="w-full">
         <table className="w-full mt-2 table-fixed">
@@ -81,14 +70,9 @@ export const Browser: React.FC<{
               </tr>
             ) : (
               <>
-                {!contents?.isRoot && <RowBack browseRelative={browseRelative} />}
+                {!contents?.isRoot && <RowBack browse={browse} />}
                 {items.map((item) => (
-                  <Row
-                    key={item.name}
-                    browseRelative={browseRelative}
-                    item={item}
-                    showPreview={showPreview}
-                  />
+                  <Row key={item.name} browse={browse} item={item} />
                 ))}
               </>
             )}
@@ -96,5 +80,19 @@ export const Browser: React.FC<{
         </table>
       </div>
     </div>
+  );
+});
+
+export const Browser: React.FC<BrowserProps> = (props) => {
+  // note: keep outside to make sure the browser only rerenders relevant deps from its contexts change
+  const { applySorting } = useSort();
+  const { applyFilters } = useFilter();
+
+  return (
+    <MemoizedBrowser
+      {...props}
+      applyFilters={applyFilters}
+      applySorting={applySorting}
+    ></MemoizedBrowser>
   );
 };

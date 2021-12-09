@@ -1,21 +1,17 @@
-import { ChangeEvent, FC, useCallback, useEffect, useMemo, useRef } from "react";
+import { ChangeEvent, FC, useCallback, useEffect, useRef } from "react";
 
 const MultiRangeSlider: FC<{
   format?: (value: number) => string;
-  values: { a: number | undefined; b: number | undefined };
+  values: { a: number; b: number };
   setValues: (a: number, b: number) => void;
   min: number;
   max: number;
-}> = ({ format = (value) => value, min, max, values, setValues }) => {
+}> = ({ format = (value) => value, min, max, values: { a, b }, setValues }) => {
   const aRef = useRef<HTMLInputElement>(null);
   const bRef = useRef<HTMLInputElement>(null);
   const range = useRef<HTMLDivElement>(null);
 
-  const a = useMemo(() => values.a ?? min, [values.a, min]);
-  const b = useMemo(() => values.b ?? max, [values.b, max]);
-  const formattedA = useMemo(() => format(a), [a, format]);
-  const formattedB = useMemo(() => format(b), [b, format]);
-
+  // note: keep `useCallback`, used in the `useEffect`s below
   const getPercent = useCallback(
     (value: number) => Math.round(((value - min) / (max - min)) * 100),
     [min, max],
@@ -79,8 +75,8 @@ const MultiRangeSlider: FC<{
         <div className="absolute z-10 w-full h-2 bg-gray-500 rounded"></div>
         <div ref={range} className="absolute z-20 h-2 bg-indigo-700 rounded"></div>
         <div className="flex justify-between mt-4 text-xs text-white">
-          <span>{formattedA}</span>
-          <span>{formattedB}</span>
+          <span>{format(a)}</span>
+          <span>{format(b)}</span>
         </div>
       </div>
     </div>

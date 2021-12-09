@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import React from "react";
 
 import { joinUrl } from "../../../utils";
 
@@ -7,23 +7,20 @@ interface PathPart {
   link: string;
 }
 
-export const Navigation: React.FC<{ browseAbsolute: (url: string) => void; path: string }> = ({
-  browseAbsolute,
+export const Navigation: React.FC<{ browse: (url: string) => void; path: string }> = ({
+  browse,
   path,
 }) => {
-  const parts: PathPart[] = useMemo(() => {
-    const parts = path
-      .split("/")
-      .filter((part) => !!part)
-      .reduce(
-        (acc, part) => {
-          acc.push({ name: part, link: joinUrl(acc[acc.length - 1].link, part) });
-          return acc;
-        },
-        [{ name: "~", link: joinUrl("/browse", "") }] as PathPart[],
-      );
-    return parts;
-  }, [path]);
+  const parts: PathPart[] = path
+    .split("/")
+    .filter((part) => !!part)
+    .reduce(
+      (acc, part) => {
+        acc.push({ name: part, link: joinUrl(acc[acc.length - 1].link, part) });
+        return acc;
+      },
+      [{ name: "~", link: joinUrl("/browse", "") }] as PathPart[],
+    );
 
   return (
     <div className="flex justify-between w-full">
@@ -36,7 +33,7 @@ export const Navigation: React.FC<{ browseAbsolute: (url: string) => void; path:
               <>
                 <span
                   className="text-blue-500 underline cursor-pointer hover:no-underline"
-                  onClick={() => browseAbsolute(part.link)}
+                  onClick={() => browse(part.link)}
                 >
                   {part.name}
                 </span>
