@@ -34,12 +34,12 @@ export const SortContext = React.createContext<SortContextType>(null!);
 export const SortProvider = ({ children }: { children: ReactNode }) => {
   const [params, setParams] = useSearchParams();
 
-  // note: keep `useMemo` to update only when URL params change
+  // note: keep `useMemo` to update only when URL params change, keeping `applySorting` stable
   const dirsFirst: boolean = useMemo(() => !!params.get("dirs"), [params]);
   const setDirsFirstInternal = (value: boolean) =>
     setParams(setOrDeleteParam(params, "dirs", value ? "true" : undefined));
 
-  // note: keep `useMemo` to update only when URL params change
+  // note: keep `useMemo` to update only when URL params change, keeping `applySorting` stable
   const sorting: Sorting | undefined = useMemo(() => {
     const sortParam = params.get("sort");
     const hyphenIndex = sortParam?.lastIndexOf("-") ?? -1;
