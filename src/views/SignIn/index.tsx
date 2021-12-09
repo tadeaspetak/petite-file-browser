@@ -37,7 +37,7 @@ export const SignIn: React.FC = () => {
           "error",
         );
         break;
-      default:
+      case "unknown":
         toast("There has been an unexpected error. Please, try again in a short while.", "error");
     }
   };

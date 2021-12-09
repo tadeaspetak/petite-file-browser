@@ -42,7 +42,7 @@ export const Browse: React.FC = () => {
             "error",
           );
           break;
-        default:
+        case "unknown":
           if (result.response.status === 404) {
             toast(
               `We couldn't find the place you were trying to browse ('${path}'). We've taken you back to the safety of the harbour ⚓`,

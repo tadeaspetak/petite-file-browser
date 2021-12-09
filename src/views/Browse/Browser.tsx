@@ -1,9 +1,10 @@
-import React from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useCallback } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import { ApiBrowseRes, BrowserItem } from "../../../src/common/types";
 import { Spinner } from "../../components";
-import { setOrDeleteParam } from "../../utils";
+import { useDeferredParams } from "../../hooks";
+import { joinUrl, setOrDeleteParam } from "../../utils";
 import { Filters, HeaderCell, Navigation, Preview, Row, RowBack, Sorting } from "./components";
 import { useFilter, useSort } from "./providers";
 
@@ -20,20 +21,36 @@ const MemoizedBrowser: React.FC<
   BrowserProps & { applyFilters: FilterOrSort; applySorting: FilterOrSort }
 > = React.memo(({ contents, loading, path, applyFilters, applySorting, setLoading }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { getParams, setParams } = useDeferredParams();
   const [params] = useSearchParams();
 
-  const browse = (url: string) => {
-    const nextParams = new URLSearchParams();
-    setOrDeleteParam(nextParams, "sort", params.get("sort") ?? undefined);
-    setOrDeleteParam(nextParams, "dirs", params.get("dirs") ?? undefined);
+  // note: keep `useCallback` to be able to keep `browseRelative` stable
+  const browse = useCallback(
+    (url: string) => {
+      const nextParams = new URLSearchParams();
+      setOrDeleteParam(nextParams, "sort", getParams().get("sort") ?? undefined);
+      setOrDeleteParam(nextParams, "dirs", getParams().get("dirs") ?? undefined);
 
-    setLoading(true); // note: prevent from rerendering rows in the time between the `navigate` call below and the fetching hook in the parent kicks in
-    navigate(`${url}?${nextParams.toString()}`);
-  };
+      setLoading(true); // note: prevent from rerendering rows in the time between the `navigate` call below and the fetching hook in the parent kicks in
+      navigate(`${url}?${nextParams.toString()}`);
+    },
+    [getParams, navigate, setLoading],
+  );
 
+  // note: keep `useCallback` to not re-render rows (memoized)
+  const browseRelative = useCallback(
+    (value: string) => browse(joinUrl("/", location.pathname, value)),
+    [browse, location.pathname],
+  );
+
+  // note: keep `useCallback` to not re-render rows (memoized)
+  const showPreview = useCallback(
+    (value: string) => void setParams(setOrDeleteParam(getParams(), "preview", value)),
+    [getParams, setParams],
+  );
   const preview = params.get("preview");
 
-  // note: no need for `useMemo` as the whole component is memoized
   const items = loading ? [] : applySorting(applyFilters([...(contents?.items ?? [])]));
 
   return (
@@ -72,7 +89,12 @@ const MemoizedBrowser: React.FC<
               <>
                 {!contents?.isRoot && <RowBack browse={browse} />}
                 {items.map((item) => (
-                  <Row key={item.name} browse={browse} item={item} />
+                  <Row
+                    key={item.name}
+                    browseRelative={browseRelative}
+                    item={item}
+                    preview={showPreview}
+                  />
                 ))}
               </>
             )}

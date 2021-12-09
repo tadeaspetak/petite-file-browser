@@ -1,27 +1,19 @@
 import { faFile, faFolder } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
 
 import { BrowserItem } from "../../../common/types";
-import { classNames, joinUrl, setOrDeleteParam } from "../../../utils";
+import { classNames } from "../../../utils";
 
-export const Row: React.FC<{ browse: (value: string) => void; item: BrowserItem }> = ({
-  browse,
-  item,
-}) => {
-  const location = useLocation();
-  const [params, setParams] = useSearchParams();
-  const preview = (value: string) => void setParams(setOrDeleteParam(params, "preview", value));
-
+export const Row: React.FC<{
+  browseRelative: (value: string) => void;
+  item: BrowserItem;
+  preview: (value: string) => void;
+}> = React.memo(({ browseRelative, item, preview }) => {
   return (
     <tr
       className="cursor-pointer hover:bg-gray-700 group"
-      onClick={() =>
-        item.type === "dir"
-          ? browse(joinUrl("/", location.pathname, item.name))
-          : preview(item.name)
-      }
+      onClick={() => (item.type === "dir" ? browseRelative(item.name) : preview(item.name))}
     >
       <td className="p-3">
         <div className="flex items-center">
@@ -36,4 +28,4 @@ export const Row: React.FC<{ browse: (value: string) => void; item: BrowserItem 
       <td className="p-3 text-right">{item.type}</td>
     </tr>
   );
-};
+});
