@@ -12,7 +12,7 @@ beforeAll(async (done) => {
   done();
 });
 
-it("receives an csrf token", async (done) => {
+it("receives a CSRF token", async (done) => {
   const response = await unauthed.get("/browse");
 
   const xCsrfToken = parseCookies(response).find((c) => c.name === "xCsrfToken");

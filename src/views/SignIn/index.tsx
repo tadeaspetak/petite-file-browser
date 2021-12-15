@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 
 import { Button } from "../../components";
-import { AuthResult, useAuth, useToasts } from "../../providers";
+import { useAuth, useToasts } from "../../providers";
 import { ForgottenPassword } from "./ForgottenPassword";
 
 export const SignIn: React.FC = () => {
@@ -15,54 +15,40 @@ export const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSignIn = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      setIsSubmitting(true);
+  const wasAuthenticatedOnMount = useRef(isAuthenticated);
 
-      const response = await signIn(email, password);
-      setIsSubmitting(false);
-      switch (response) {
-        case AuthResult.INVALID_CSRF:
-          toast(
-            "You must have had this window open for a loooong time. Please trying signing in once more.",
-            "error",
-            { id: "sign-in-error" },
-          );
-          break;
-        case AuthResult.INVALID_CREDENTIALS:
-          toast("Invalid credentials.", "error", { id: "sign-in-error" });
-          break;
-        case AuthResult.SUCCESS:
-          untoast("sign-in-error");
-          navigate(location.state?.from?.pathname || "/browse", { replace: true });
-          break;
-        case AuthResult.NETWORK_ERROR:
-          toast(
-            "We couldn't connect to the server. Please, check your connection, or try again in a short while.",
-            "error",
-            { id: "sign-in-error" },
-          );
-          break;
-        case AuthResult.UNKNOWN_ERROR:
-          toast(
-            "Something unexpected has gone out of whack, please try again in a few moments.",
-            "error",
-            { id: "sign-in-error" },
-          );
-          break;
-      }
-    },
-    [email, password, location.state, toast, untoast, navigate, signIn],
-  );
+  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const response = await signIn(email, password);
+    setIsSubmitting(false);
+    switch (response.status) {
+      case "ok":
+        untoast("sign-in");
+        navigate(location.state?.from?.pathname || "/browse", { replace: true });
+        break;
+      case "unauthorized":
+        toast("Invalid credentials.", "error", { id: "sign-in" });
+        break;
+      case "network":
+        toast(
+          "We couldn't connect to the server. Please, check your connection, or try again in a short while.",
+          "error",
+        );
+        break;
+      case "unknown":
+        toast("There has been an unexpected error. Please, try again in a short while.", "error");
+    }
+  };
 
   // note: perform the check only on mounting (and **not** on subsequent changes) to avoid race conditions with the router
   useEffect(() => {
-    if (isAuthenticated) navigate("/browse");
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (wasAuthenticatedOnMount.current) navigate("/browse");
+  }, [navigate]);
 
   return (
-    <div className="mx-auto">
+    <div className="mx-auto mt-8">
       <Routes>
         <Route
           path="forgotten"
@@ -84,7 +70,7 @@ export const SignIn: React.FC = () => {
           </label>
           <input
             required
-            className="w-full px-3 py-2 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none"
+            className="w-full px-3 py-2 text-gray-700 border rounded shadow appearance-none focus:outline-none"
             id="email"
             type="email"
             placeholder="Email"
@@ -100,7 +86,7 @@ export const SignIn: React.FC = () => {
           </label>
           <input
             required
-            className="w-full px-3 py-2 mb-3 leading-tight text-gray-700 border rounded shadow appearance-none focus:outline-none"
+            className="w-full px-3 py-2 mb-3 text-gray-700 border rounded shadow appearance-none focus:outline-none"
             id="password"
             type="password"
             placeholder="Password"

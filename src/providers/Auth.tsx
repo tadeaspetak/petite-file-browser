@@ -1,97 +1,65 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 
-import { ApiSessionReq, ApiSessionRes } from "../../common/types";
-import { getCookie } from "../utils";
-
-export enum AuthResult {
-  INVALID_CSRF,
-  INVALID_CREDENTIALS,
-  SUCCESS,
-  UNKNOWN_ERROR,
-  NETWORK_ERROR,
-}
+import { ApiSessionReq, ApiSessionRes } from "../../src/common/types";
+import { SmartFetchResult, useSmartFetch } from "../hooks";
 
 type User = ApiSessionRes;
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<AuthResult>;
-  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<SmartFetchResult<User>>;
+  signOut: () => Promise<SmartFetchResult<void>>;
   user?: User;
 }
 
-let AuthContext = React.createContext<AuthContextType>(null!);
+const AuthContext = React.createContext<AuthContextType>(null!);
 
 const getPersistedUser = () => localStorage.getItem("user");
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<User | undefined>();
   const retriedCsrfToken = useRef(false);
 
+  const { smartFetch } = useSmartFetch();
+
   useEffect(() => {
     const user = getPersistedUser();
     if (user) setUser(JSON.parse(user));
   }, []);
 
-  const isAuthenticated = useMemo(() => {
-    return user || getPersistedUser() ? true : false; // components mount faster than the hook above evaluates
-  }, [user]);
+  // components mount faster than the hook above evaluates, init immediately
+  const isAuthenticated = user || getPersistedUser() ? true : false;
 
-  const signIn = useCallback(async (email: string, password: string): Promise<AuthResult> => {
-    try {
-      const params: ApiSessionReq = { email, password };
+  const signIn = async (email: string, password: string): Promise<SmartFetchResult<User>> => {
+    const params: ApiSessionReq = { email, password };
 
-      const response = await fetch("/api/auth/session", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-csrf-token": getCookie("xCsrfToken") ?? "",
-        },
-        body: JSON.stringify(params),
-      });
+    const result = await smartFetch<ApiSessionRes>("/api/auth/session", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
 
-      switch (response.status) {
-        case 400:
-          // implies the CSRF cookie must have expired, let's try once more
-          if (!retriedCsrfToken.current) {
-            console.log("retrying CSRF..."); // eslint-disable-line no-console
-            retriedCsrfToken.current = true;
-            return signIn(email, password);
-          }
-          console.error("CSRF token unsuccessful on a retry, should be impossible?", response); // eslint-disable-line no-console
-          return AuthResult.UNKNOWN_ERROR;
-        case 401:
-          return AuthResult.INVALID_CREDENTIALS;
-        case 200:
-          const json: ApiSessionRes = await response.json();
-
-          retriedCsrfToken.current = false;
-          localStorage.setItem("user", JSON.stringify(json));
-          setUser(json);
-
-          return AuthResult.SUCCESS;
-        default:
-          console.error(response); // eslint-disable-line no-console
-          return AuthResult.UNKNOWN_ERROR;
-      }
-    } catch (e) {
-      console.error(e); // eslint-disable-line no-console
-      return AuthResult.NETWORK_ERROR;
+    if (result.status === "ok") {
+      retriedCsrfToken.current = false;
+      localStorage.setItem("user", JSON.stringify(result.parsed));
+      setUser(result.parsed);
     }
-  }, []);
 
+    return result;
+  };
+
+  // note: keep `useCallback`, used in other hooks (e.g. in `views/Browse/index`)
   const signOut = useCallback(async () => {
-    try {
-      await fetch("/api/auth/session", {
-        method: "DELETE",
-        headers: { "content-type": "application/json" },
-      });
+    const response = await smartFetch<void>("/api/auth/session", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+    });
 
+    if (response.status === "ok") {
       localStorage.removeItem("user");
       setUser(undefined);
-    } catch (e) {
-      console.error(e); // eslint-disable-line no-console
     }
-  }, []);
+
+    return response;
+  }, [smartFetch]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, signIn, signOut, user }}>

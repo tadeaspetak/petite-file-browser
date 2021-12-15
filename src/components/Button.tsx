@@ -1,6 +1,5 @@
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useMemo } from "react";
 
 import { classNames } from "../utils";
 import { Spinner } from "./Spinner";
@@ -40,8 +39,9 @@ export const Button: React.FC<ButtonProps> = ({
   size,
   type = "button",
 }) => {
-  const isDisabled = useMemo(() => disabled || loading, [disabled, loading]);
-  const isSmall = useMemo(() => size === "sm", [size]);
+  const isDisabled = disabled || loading;
+  const isSmall = size === "sm";
+
   return (
     <button
       className={classNames(
@@ -49,7 +49,7 @@ export const Button: React.FC<ButtonProps> = ({
         className,
         { "text-sm": isSmall },
         { [`rounded-full ${isSmall ? "w-6 h-6" : "w-10 h-10"}`]: round },
-        { [`${isSmall ? "py-1 px-3" : "py-2 px-6"}`]: !round },
+        { [`${isSmall ? "py-1 px-3" : "py-2 px-5"}`]: !round },
         { [`${colors[kind][0]} cursor-not-allowed`]: isDisabled },
         { [`${colors[kind][1]} hover:${colors[kind][2]}`]: !isDisabled },
       )}
@@ -63,7 +63,7 @@ export const Button: React.FC<ButtonProps> = ({
           <Spinner className={`${isSmall ? "w-4" : "w-6"} text-black`} stroke={2} />
         </span>
       )}
-      <span className={`${loading ? "invisible" : ""}`}>
+      <span className={classNames({ invisible: loading })}>
         {icon && <FontAwesomeIcon icon={icon} />}
         {label && label}
       </span>

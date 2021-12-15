@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { Button, Modal } from "../../components";
@@ -6,9 +5,7 @@ import { Button, Modal } from "../../components";
 export const ForgottenPassword: React.FC<{ prefill: () => void }> = ({ prefill }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const onClose = useCallback(() => {
-    navigate("/sign-in", { state: location.state });
-  }, [navigate, location.state]);
+  const onClose = () => void navigate("/sign-in", { state: location.state });
 
   return (
     <Modal.Wrapper onClose={onClose}>

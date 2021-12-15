@@ -1,5 +1,5 @@
+import { useTimeout } from "../hooks";
 import { Toast, ToastType, useToasts } from "../providers/Toasts";
-import { useTimeout } from "../utils";
 
 const colors: { [key in ToastType]: [string, string] } = {
   info: ["bg-blue-500", "border-blue-700"],
@@ -17,9 +17,7 @@ const ToastMessage: React.FC<{ toast: Toast }> = ({ toast }) => {
     <div
       title="Close the notification"
       className={`rounded relative py-2 px-3 text-sm border-l-4 ${colors[type][1]} hover:shadow-inner text-white cursor-pointer ${colors[type][0]}`}
-      onClick={() => {
-        untoast(id);
-      }}
+      onClick={() => untoast(id)}
     >
       <span className="inline-block mr-6 align-middle">{body}</span>
     </div>
@@ -30,7 +28,7 @@ export const Toaster: React.FC = () => {
   const { toasts } = useToasts();
   return toasts.length === 0 ? null : (
     <div
-      className="fixed z-10 flex justify-end top-8 left-1/2"
+      className="fixed z-50 flex justify-end top-8 left-1/2"
       style={{ transform: "translateX(-50%)" }}
     >
       <div className="flex flex-col items-end max-w-xs space-y-2">
