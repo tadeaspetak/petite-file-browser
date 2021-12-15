@@ -4,7 +4,7 @@ This tiny, or shall we say _petite_, file browser was created as part of the fro
 
 I did not end up pursuing that path in the end. The code, however, is pretty much as clean as I can make it, using few dependencies, and taking into account all sorts of edge cases. So why not keep it here as a reference?
 
-See a demo at: [https://petite-file-browser.herokuapp.com/](https://petite-file-browser.herokuapp.com/). Give the pod a sec to load, it might have been hybernating for quite some time ;)
+<img src="screens/browsing.png" style="max-width: 600px" alt="Browsing" />
 
 ## Design Document
 
