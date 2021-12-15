@@ -66,6 +66,7 @@ Let's use React (`create-react-app` for the simplicity of its setup), React Rout
  - **URL as the source of truth:** We will store user's current working directory inside the file tree as URL params, the sorting and filtering criteria as query params (`/browse/my-directory/my-child-directory?sort=name-up&search=holida`).
  - **Error handling**: Let's pay attention to loading states, errors (at the very least 400, 401, 403, 404, 500) and edge cases such as invalid filtering options, etc.
  - **Security:** Input and output shall be sanitised (URL params, query params, and the search input field).
+ - Let's prevent as much unnecessary re-rendering as possible, especially when it comes to components that could have hundreds of instnaces, such as file browser rows. To achieve this, we shall employ `useMemo`, `useCallback`, and `React.memo` [without](https://dmitripavlutin.com/dont-overuse-react-usecallback/) [overdoing](https://kentcdodds.com/blog/usememo-and-usecallback) [it](https://amberwilson.co.uk/blog/how-and-when-to-use-react-usecallback/).
 
 ## Backend
 
@@ -73,9 +74,9 @@ The server will be a plain `express` app. For the sake of simplicity, let's skip
 
 Since searching and filtering is required on the client only, a handful of API endpoints will suffice:
 
- - `GET /contents?path={path}` to obtain 1-level deep contents of a directory, returning `{ contents: Item }` where `interface Item { name: string, sizeKb: number | undefined, type: "file" | "dir", items: undefined | Item[] }`
- - `POST /sign-in` to sign the user in
- - `POST /sign-out` to sign the user out (`POST` to avoid [prefetching it](https://twitter.com/nick_craver/status/296281730984316928?lang=fa) 🤦) 
+ - `GET /contents?path={path}` to obtain 1-level deep contents of a directory, returning something like `{ contents: Item }` where `interface Item { name: string, sizeKb: number | undefined, type: "file" | "dir", items: undefined | Item[] }`
+ - `POST /auth/session` to sign the user in
+ - `DELETE /auth/session` to sign the user out (`DELETE` to avoid [prefetching it](https://twitter.com/nick_craver/status/296281730984316928?lang=fa) 🤦) 
 
 ## Security
 
@@ -116,15 +117,15 @@ Should a vector attack exist after all, we can mitigate this by storing the `ses
 
 ### Cross-Site-Request-Forgery (CSRF)
 
-Since CSRF exploits are applicable only with state-changing requests, we have a single candidate to protect, namely the `POST /sign-in` endpoint. To prevent the login flavour of CSRF, let's:
+Since CSRF exploits are applicable only with state-changing requests, we have a single candidate to protect, namely the `POST /auth/session` endpoint. To prevent the login flavour of CSRF, let's:
 
  - Disable `CORS`; in our case, this is the default behaviour.
  - Check the `Content-Type` header is set to `application/json` to prevent e.g. 3rd party forms from being submitted to our endpoint.
  - Set the `sameSite` attribute of our `sessionId` cookie to `lax` to prevent it from being sent on cross-site requests (with the exception of the "safe" `GET` and `HEAD` which should never be modifying state).
 
- The above combo 👆 should actually suffice, but we might as well implement token-based mitigation for good measure and practice:
+ The above combo 👆 should actually suffice, but we might as well implement double-submit cookie mitigation for good measure and practice:
  
-  - Once the user hits the `sign-in` view, the client will ping the API to obtain a `csrfId` token via a cookie in the response (`sameSite: strict`). This token token will be sent alongside the credentials in the JSON body and checked against the one in the cookie to verify taht the `sign-in` request is being sent from our own site.
+  - Whenever the client requests our SPA, it receives a `csrf` token via a cookie (`sameSite: strict`). This token will be sent alongside the credentials in a `x-csrf-token` header and checked against the one in the cookie to verify the `sign-in` request is being sent from our own site.
 
 ### Security in the Real World
 
